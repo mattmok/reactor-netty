@@ -209,6 +209,9 @@ task japicmp(type: JapicmpTask) {
 	ignoreMissingClasses = true
 	includeSynthetic = true
 	onlyIf { "$compatibleVersion" != "SKIP" }
+	fieldExcludes = [
+			'reactor.netty.http.websocket.WebsocketOutbound#stringToWebsocketFrame'
+	]
 	methodExcludes = [
 			'reactor.netty.http.Cookies#newServerRequestHolder(io.netty.handler.codec.http.HttpHeaders, io.netty.handler.codec.http.cookie.ServerCookieDecoder)',
 			'reactor.netty.http.HttpOperations#addHandler(java.lang.String, io.netty.channel.ChannelHandler)',
