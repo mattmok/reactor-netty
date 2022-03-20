@@ -20,7 +20,6 @@ import java.net.SocketAddress;
 import java.nio.charset.Charset;
 import java.time.Duration;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,15 +36,10 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelPipeline;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
-import io.netty.handler.ssl.ApplicationProtocolConfig;
-import io.netty.handler.ssl.ApplicationProtocolNames;
-import io.netty.handler.ssl.IdentityCipherSuiteFilter;
-import io.netty.handler.ssl.OpenSsl;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.ssl.SslHandshakeCompletionEvent;
-import io.netty.handler.ssl.SupportedCipherSuiteFilter;
 import reactor.core.Exceptions;
 import reactor.netty.NettyPipeline;
 import reactor.netty.ReactorNetty;
@@ -84,18 +78,6 @@ public final class SslProvider {
 		Objects.requireNonNull(provider, "provider");
 		Objects.requireNonNull(handlerConfigurator, "handlerConfigurator");
 		return new SslProvider(provider, handlerConfigurator);
-	}
-
-	/**
-	 * @deprecated as of 1.0.6. Prefer {@link SslProvider.SslContextSpec#sslContext(ProtocolSslContextSpec)},
-	 * where the default configuration is applied before any other custom configuration.
-	 * This will be removed in version 1.2.0.
-	 */
-	@Deprecated
-	public static SslProvider updateDefaultConfiguration(SslProvider provider, DefaultConfigurationType type) {
-		Objects.requireNonNull(provider, "provider");
-		Objects.requireNonNull(type, "type");
-		return new SslProvider(provider, type);
 	}
 
 	/**
@@ -226,8 +208,7 @@ public final class SslProvider {
 		/**
 		 * SslContext builder that provides, specific for the protocol, default configuration
 		 * e.g. {@link DefaultSslContextSpec}, {@link TcpSslContextSpec} etc.
-		 * As opposed to {@link #sslContext(SslContextBuilder)}, the default configuration is applied before
-		 * any other custom configuration.
+		 * The default configuration is applied before any other custom configuration.
 		 *
 		 * @param spec SslContext builder that provides, specific for the protocol, default configuration
 		 * @return {@literal this}
@@ -243,64 +224,6 @@ public final class SslProvider {
 		 * @return {@literal this}
 		 */
 		Builder sslContext(SslContext sslContext);
-
-		/**
-		 * The SslContextBuilder for building a new {@link SslContext}. The default configuration is applied after
-		 * the custom configuration.
-		 *
-		 * @return {@literal this}
-		 * @deprecated as of 1.0.6. Prefer {@link #sslContext(ProtocolSslContextSpec)}, where the default
-		 * configuration is applied before any other custom configuration.
-		 * This method will be removed in version 1.2.0.
-		 */
-		@Deprecated
-		DefaultConfigurationSpec sslContext(SslContextBuilder sslCtxBuilder);
-	}
-
-	/**
-	 * Default configuration that will be applied to the provided
-	 * {@link SslContextBuilder}
-	 * @deprecated as of 1.0.6. Prefer {@link SslProvider.SslContextSpec#sslContext(ProtocolSslContextSpec)},
-	 * where the default configuration is applied before any other custom configuration.
-	 * This will be removed in version 1.2.0.
-	 */
-	@Deprecated
-	public enum DefaultConfigurationType {
-		/**
-		 * There will be no default configuration
-		 */
-		NONE,
-		/**
-		 * {@link io.netty.handler.ssl.SslProvider} will be set depending on
-		 * <code>OpenSsl.isAvailable()</code>
-		 */
-		TCP,
-		/**
-		 * {@link io.netty.handler.ssl.SslProvider} will be set depending on
-		 * <code>OpenSsl.isAlpnSupported()</code>,
-		 * {@link #HTTP2_CIPHERS},
-		 * ALPN support,
-		 * HTTP/1.1 and HTTP/2 support
-		 */
-		H2
-	}
-
-	/**
-	 * @deprecated as of 1.0.6. Prefer {@link SslProvider.SslContextSpec#sslContext(ProtocolSslContextSpec)},
-	 * where the default configuration is applied before any other custom configuration.
-	 * This will be removed in version 1.2.0.
-	 */
-	@Deprecated
-	public interface DefaultConfigurationSpec {
-
-		/**
-		 * Default configuration type that will be applied to the provided
-		 * {@link SslContextBuilder}
-		 *
-		 * @param type The default configuration type.
-		 * @return {@code this}
-		 */
-		Builder defaultConfiguration(DefaultConfigurationType type);
 	}
 
 	/**
@@ -330,7 +253,6 @@ public final class SslProvider {
 
 	final SslContext                   sslContext;
 	final SslContextBuilder            sslContextBuilder;
-	final DefaultConfigurationType     type;
 	final long                         handshakeTimeoutMillis;
 	final long                         closeNotifyFlushTimeoutMillis;
 	final long                         closeNotifyReadTimeoutMillis;
@@ -340,12 +262,8 @@ public final class SslProvider {
 
 	SslProvider(SslProvider.Build builder) {
 		this.sslContextBuilder = builder.sslCtxBuilder;
-		this.type = builder.type;
 		if (builder.sslContext == null) {
 			if (sslContextBuilder != null) {
-				if (type != null) {
-					updateDefaultConfiguration();
-				}
 				try {
 					this.sslContext = sslContextBuilder.build();
 				}
@@ -387,12 +305,7 @@ public final class SslProvider {
 		this.closeNotifyReadTimeoutMillis = builder.closeNotifyReadTimeoutMillis;
 		this.builderHashCode = builder.hashCode();
 		if (!builder.confPerDomainName.isEmpty()) {
-			if (this.type != null) {
-				this.sniProvider = updateAllSslProviderConfiguration(builder.confPerDomainName, this, type);
-			}
-			else {
-				this.sniProvider = new SniProvider(builder.confPerDomainName, this);
-			}
+			this.sniProvider = new SniProvider(builder.confPerDomainName, this);
 		}
 		else {
 			this.sniProvider = null;
@@ -402,7 +315,6 @@ public final class SslProvider {
 	SslProvider(SslProvider from, Consumer<? super SslHandler> handlerConfigurator) {
 		this.sslContext = from.sslContext;
 		this.sslContextBuilder = from.sslContextBuilder;
-		this.type = from.type;
 		if (from.handlerConfigurator == null) {
 			this.handlerConfigurator = handlerConfigurator;
 		}
@@ -419,70 +331,6 @@ public final class SslProvider {
 		this.sniProvider = from.sniProvider;
 	}
 
-	SslProvider(SslProvider from, DefaultConfigurationType type) {
-		this.sslContextBuilder = from.sslContextBuilder;
-		this.type = type;
-		if (this.sslContextBuilder != null) {
-			updateDefaultConfiguration();
-			try {
-				this.sslContext = sslContextBuilder.build();
-			}
-			catch (SSLException e) {
-				throw Exceptions.propagate(e);
-			}
-		}
-		else {
-			this.sslContext = from.sslContext;
-		}
-		this.handlerConfigurator = from.handlerConfigurator;
-		this.handshakeTimeoutMillis = from.handshakeTimeoutMillis;
-		this.closeNotifyFlushTimeoutMillis = from.closeNotifyFlushTimeoutMillis;
-		this.closeNotifyReadTimeoutMillis = from.closeNotifyReadTimeoutMillis;
-		this.builderHashCode = from.builderHashCode;
-		if (from.sniProvider != null) {
-			this.sniProvider = updateAllSslProviderConfiguration(from.sniProvider.confPerDomainName, this, type);
-		}
-		else {
-			this.sniProvider = null;
-		}
-	}
-
-	SniProvider updateAllSslProviderConfiguration(Map<String, SslProvider> confPerDomainName,
-			SslProvider defaultSslProvider, SslProvider.DefaultConfigurationType type) {
-		Map<String, SslProvider> config = new HashMap<>();
-		confPerDomainName.forEach((s, sslProvider) ->
-				config.put(s, SslProvider.updateDefaultConfiguration(sslProvider, type)));
-		return new SniProvider(config, defaultSslProvider);
-	}
-
-	void updateDefaultConfiguration() {
-		switch (type) {
-			case H2:
-				sslContextBuilder.sslProvider(
-				                     io.netty.handler.ssl.SslProvider.isAlpnSupported(io.netty.handler.ssl.SslProvider.OPENSSL) ?
-				                             io.netty.handler.ssl.SslProvider.OPENSSL :
-				                             io.netty.handler.ssl.SslProvider.JDK)
-				                 .ciphers(HTTP2_CIPHERS, SupportedCipherSuiteFilter.INSTANCE)
-				                 .applicationProtocolConfig(new ApplicationProtocolConfig(
-				                     ApplicationProtocolConfig.Protocol.ALPN,
-				                     ApplicationProtocolConfig.SelectorFailureBehavior.NO_ADVERTISE,
-				                     ApplicationProtocolConfig.SelectedListenerFailureBehavior.ACCEPT,
-				                     ApplicationProtocolNames.HTTP_2,
-				                     ApplicationProtocolNames.HTTP_1_1));
-				break;
-			case TCP:
-				sslContextBuilder.sslProvider(
-				                     OpenSsl.isAvailable() ?
-				                             io.netty.handler.ssl.SslProvider.OPENSSL :
-				                             io.netty.handler.ssl.SslProvider.JDK)
-				                 .ciphers(null, IdentityCipherSuiteFilter.INSTANCE)
-				                 .applicationProtocolConfig(null);
-				break;
-			case NONE:
-				break; //no default configuration
-		}
-	}
-
 	/**
 	 * Returns {@code SslContext} instance with configured settings.
 	 *
@@ -490,16 +338,6 @@ public final class SslProvider {
 	 */
 	public SslContext getSslContext() {
 		return this.sslContext;
-	}
-
-	/**
-	 * Returns the configured default configuration type.
-	 *
-	 * @return the configured default configuration type.
-	 */
-	@Nullable
-	public DefaultConfigurationType getDefaultConfigurationType() {
-		return this.type;
 	}
 
 	public void configure(SslHandler sslHandler) {
@@ -557,7 +395,6 @@ public final class SslProvider {
 	@Override
 	public String toString() {
 		return "SslProvider {" +
-				"type=" + type +
 				", handshakeTimeoutMillis=" + handshakeTimeoutMillis +
 				", closeNotifyFlushTimeoutMillis=" + closeNotifyFlushTimeoutMillis +
 				", closeNotifyReadTimeoutMillis=" + closeNotifyReadTimeoutMillis +
@@ -593,7 +430,7 @@ public final class SslProvider {
 		}
 	}
 
-	static final class Build implements SslContextSpec, DefaultConfigurationSpec, Builder {
+	static final class Build implements SslContextSpec, Builder {
 
 		/**
 		 * Default SSL handshake timeout (milliseconds), fallback to 10 seconds
@@ -605,7 +442,6 @@ public final class SslProvider {
 
 		SslContextBuilder sslCtxBuilder;
 		ProtocolSslContextSpec protocolSslContextSpec;
-		DefaultConfigurationType type;
 		SslContext sslContext;
 		Consumer<? super SslHandler> handlerConfigurator;
 		long handshakeTimeoutMillis = DEFAULT_SSL_HANDSHAKE_TIMEOUT;
@@ -619,28 +455,12 @@ public final class SslProvider {
 		@Override
 		public Builder sslContext(ProtocolSslContextSpec protocolSslContextSpec) {
 			this.protocolSslContextSpec = protocolSslContextSpec;
-			this.type = DefaultConfigurationType.NONE;
 			return this;
 		}
 
 		@Override
 		public final Builder sslContext(SslContext sslContext) {
 			this.sslContext = Objects.requireNonNull(sslContext, "sslContext");
-			this.type = DefaultConfigurationType.NONE;
-			return this;
-		}
-
-		@Override
-		public final DefaultConfigurationSpec sslContext(SslContextBuilder sslCtxBuilder) {
-			this.sslCtxBuilder = Objects.requireNonNull(sslCtxBuilder, "sslCtxBuilder");
-			return this;
-		}
-
-		//DefaultConfigurationSpec
-
-		@Override
-		public final Builder defaultConfiguration(DefaultConfigurationType type) {
-			this.type = Objects.requireNonNull(type, "type");
 			return this;
 		}
 
@@ -747,7 +567,6 @@ public final class SslProvider {
 					closeNotifyFlushTimeoutMillis == build.closeNotifyFlushTimeoutMillis &&
 					closeNotifyReadTimeoutMillis == build.closeNotifyReadTimeoutMillis &&
 					Objects.equals(sslCtxBuilder, build.sslCtxBuilder) &&
-					type == build.type &&
 					Objects.equals(sslContext, build.sslContext) &&
 					Objects.equals(handlerConfigurator, build.handlerConfigurator) &&
 					Objects.equals(serverNames, build.serverNames) &&
@@ -757,7 +576,7 @@ public final class SslProvider {
 
 		@Override
 		public int hashCode() {
-			return Objects.hash(sslCtxBuilder, type, sslContext, handlerConfigurator,
+			return Objects.hash(sslCtxBuilder, sslContext, handlerConfigurator,
 					handshakeTimeoutMillis, closeNotifyFlushTimeoutMillis, closeNotifyReadTimeoutMillis,
 					serverNames, confPerDomainName, protocolSslContextSpec);
 		}
@@ -813,34 +632,4 @@ public final class SslProvider {
 	static final LoggingHandler LOGGING_HANDLER =
 			AdvancedByteBufFormat.HEX_DUMP
 					.toLoggingHandler("reactor.netty.tcp.ssl", LogLevel.DEBUG, Charset.defaultCharset());
-
-	/**
-	 * <a href="https://wiki.mozilla.org/Security/Server_Side_TLS#Modern_compatibility">Mozilla Modern Cipher
-	 * Suites</a> minus the following cipher suites that are black listed by the
-	 * <a href="https://tools.ietf.org/html/rfc7540#appendix-A">HTTP/2 RFC</a>.
-	 * Copied from io.netty.handler.codec.http2.Http2SecurityUtil
-	 */
-	static final List<String> HTTP2_CIPHERS =
-			Collections.unmodifiableList(Arrays.asList(
-					/* openssl = ECDHE-ECDSA-AES128-GCM-SHA256 */
-					"TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256",
-
-					/* REQUIRED BY HTTP/2 SPEC */
-					/* openssl = ECDHE-RSA-AES128-GCM-SHA256 */
-					"TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256",
-					/* REQUIRED BY HTTP/2 SPEC */
-
-					/* openssl = ECDHE-ECDSA-AES256-GCM-SHA384 */
-					"TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384",
-					/* openssl = ECDHE-RSA-AES256-GCM-SHA384 */
-					"TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",
-					/* openssl = ECDHE-ECDSA-CHACHA20-POLY1305 */
-					"TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256",
-					/* openssl = ECDHE-RSA-CHACHA20-POLY1305 */
-					"TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256",
-
-					/* TLS 1.3 ciphers */
-					"TLS_AES_128_GCM_SHA256",
-					"TLS_AES_256_GCM_SHA384",
-					"TLS_CHACHA20_POLY1305_SHA256"));
 }

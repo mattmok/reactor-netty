@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2021 VMware, Inc. or its affiliates, All Rights Reserved.
+ * Copyright (c) 2017-2022 VMware, Inc. or its affiliates, All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ import io.netty.channel.ChannelOption;
 import io.netty.util.AttributeKey;
 import reactor.core.publisher.Mono;
 import reactor.netty.DisposableServer;
-import reactor.netty.tcp.SslProvider;
 import reactor.netty.tcp.TcpServerConfig;
 
 import java.net.InetSocketAddress;
@@ -55,7 +54,6 @@ final class HttpServerBind extends HttpServer {
 	}
 
 	@Override
-	@SuppressWarnings("deprecation")
 	public Mono<? extends DisposableServer> bind() {
 		if (config.sslProvider != null) {
 			if ((config._protocols & HttpServerConfig.h2c) == HttpServerConfig.h2c) {
@@ -63,19 +61,6 @@ final class HttpServerBind extends HttpServer {
 						"Configured H2 Clear-Text protocol with TLS. " +
 								"Use the non Clear-Text H2 protocol via " +
 								"HttpServer#protocol or disable TLS via HttpServer#noSSL())"));
-			}
-			if (config.sslProvider.getDefaultConfigurationType() == null) {
-				HttpServer dup = duplicate();
-				HttpServerConfig _config = dup.configuration();
-				if ((_config._protocols & HttpServerConfig.h2) == HttpServerConfig.h2) {
-					_config.sslProvider = SslProvider.updateDefaultConfiguration(_config.sslProvider,
-							SslProvider.DefaultConfigurationType.H2);
-				}
-				else {
-					_config.sslProvider = SslProvider.updateDefaultConfiguration(_config.sslProvider,
-							SslProvider.DefaultConfigurationType.TCP);
-				}
-				return dup.bind();
 			}
 		}
 		else {

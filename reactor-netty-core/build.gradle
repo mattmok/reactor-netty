@@ -202,8 +202,15 @@ task japicmp(type: JapicmpTask) {
 			'reactor.netty.Connection#addHandler(io.netty.channel.ChannelHandler)',
 			'reactor.netty.Connection#addHandler(java.lang.String, io.netty.channel.ChannelHandler)',
 
+			'reactor.netty.tcp.SslProvider$SslContextSpec#sslContext(io.netty.handler.ssl.SslContextBuilder)',
+			'reactor.netty.tcp.SslProvider#getDefaultConfigurationType()',
+			'reactor.netty.tcp.SslProvider#updateDefaultConfiguration(reactor.netty.tcp.SslProvider, reactor.netty.tcp.SslProvider$DefaultConfigurationType)',
 			'reactor.netty.tcp.TcpClient#addressSupplier(java.util.function.Supplier)',
 			'reactor.netty.tcp.TcpClient#bootstrap(java.util.function.Function)'
+	]
+	classExcludes = [
+			'reactor.netty.tcp.SslProvider$DefaultConfigurationSpec',
+			'reactor.netty.tcp.SslProvider$DefaultConfigurationType'
 	]
 }
 
