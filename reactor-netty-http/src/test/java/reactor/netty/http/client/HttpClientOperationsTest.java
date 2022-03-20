@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2021 VMware, Inc. or its affiliates, All Rights Reserved.
+ * Copyright (c) 2017-2022 VMware, Inc. or its affiliates, All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,7 +47,7 @@ class HttpClientOperationsTest {
 		EmbeddedChannel channel = new EmbeddedChannel();
 		new HttpClientOperations(() -> channel, ConnectionObserver.emptyListener(),
 				ClientCookieEncoder.STRICT, ClientCookieDecoder.STRICT)
-				.addHandler(new JsonObjectDecoder());
+				.addHandlerLast(new JsonObjectDecoder());
 		channel.writeInbound(new DefaultLastHttpContent(buf));
 
 		assertThat(channel.pipeline().names()).first().isEqualTo("JsonObjectDecoder$extractor");
@@ -70,7 +70,7 @@ class HttpClientOperationsTest {
 		EmbeddedChannel channel = new EmbeddedChannel();
 		new HttpClientOperations(() -> channel, ConnectionObserver.emptyListener(),
 				ClientCookieEncoder.STRICT, ClientCookieDecoder.STRICT)
-				.addHandler("json", new JsonObjectDecoder());
+				.addHandlerLast("json", new JsonObjectDecoder());
 		channel.writeInbound(new DefaultLastHttpContent(buf));
 
 		assertThat(channel.pipeline().names()).first().isEqualTo("json$extractor");
@@ -93,7 +93,7 @@ class HttpClientOperationsTest {
 		EmbeddedChannel channel = new EmbeddedChannel();
 		new HttpClientOperations(() -> channel, ConnectionObserver.emptyListener(),
 				ClientCookieEncoder.STRICT, ClientCookieDecoder.STRICT)
-				.addHandler(new JsonObjectDecoder());
+				.addHandlerLast(new JsonObjectDecoder());
 		channel.writeInbound(new DefaultLastHttpContent(buf));
 
 		assertThat(channel.pipeline().names()).first().isEqualTo("JsonObjectDecoder$extractor");
@@ -116,7 +116,7 @@ class HttpClientOperationsTest {
 		EmbeddedChannel channel = new EmbeddedChannel();
 		new HttpClientOperations(() -> channel, ConnectionObserver.emptyListener(),
 				ClientCookieEncoder.STRICT, ClientCookieDecoder.STRICT)
-				.addHandler("json", new JsonObjectDecoder());
+				.addHandlerLast("json", new JsonObjectDecoder());
 		channel.writeInbound(new DefaultLastHttpContent(buf));
 
 		assertThat(channel.pipeline().names()).first().isEqualTo("json$extractor");
