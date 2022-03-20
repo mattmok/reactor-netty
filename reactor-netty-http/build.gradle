@@ -224,7 +224,11 @@ task japicmp(type: JapicmpTask) {
 
 			// TODO temporary disable multipart on the client
 			'reactor.netty.http.client.HttpClient$RequestSender#sendForm(java.util.function.BiConsumer)',
-			'reactor.netty.http.client.HttpClient$RequestSender#sendForm(java.util.function.BiConsumer, java.util.function.Consumer)'
+			'reactor.netty.http.client.HttpClient$RequestSender#sendForm(java.util.function.BiConsumer, java.util.function.Consumer)',
+
+			// TODO temporary disable multipart on the server
+			'reactor.netty.http.server.HttpServerRequest#receiveForm()',
+			'reactor.netty.http.server.HttpServerRequest#receiveForm(java.util.function.Consumer)',
 
 			// Changes related to Netty 5 package change
 			'reactor.netty.http.Cookies#newClientResponseHolder(io.netty.handler.codec.http.HttpHeaders, io.netty.handler.codec.http.cookie.ClientCookieDecoder)',
