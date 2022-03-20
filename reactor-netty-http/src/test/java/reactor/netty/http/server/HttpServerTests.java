@@ -51,8 +51,8 @@ import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.ByteBufHolder;
 import io.netty.buffer.Unpooled;
 import io.netty5.channel.Channel;
+import io.netty5.channel.ChannelHandlerAdapter;
 import io.netty5.channel.ChannelHandlerContext;
-import io.netty5.channel.ChannelInboundHandlerAdapter;
 import io.netty5.channel.embedded.EmbeddedChannel;
 import io.netty5.channel.group.DefaultChannelGroup;
 import io.netty5.channel.unix.DomainSocketAddress;
@@ -1043,7 +1043,7 @@ class HttpServerTests extends BaseHttpTest {
 	void testCustomHandlerInvokedBeforeIOHandler() {
 		disposableServer =
 				createServer()
-				          .doOnConnection(c -> c.addHandlerFirst("custom", new ChannelInboundHandlerAdapter() {
+				          .doOnConnection(c -> c.addHandlerFirst("custom", new ChannelHandlerAdapter() {
 				                      @Override
 				                      public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
 				                          if (msg instanceof HttpRequest) {
@@ -1446,7 +1446,7 @@ class HttpServerTests extends BaseHttpTest {
 		disposableServer =
 				createServer()
 				          .doOnConnection(conn -> conn.channel().pipeline().addAfter(NettyPipeline.HttpTrafficHandler, null,
-				                  new ChannelInboundHandlerAdapter() {
+				                  new ChannelHandlerAdapter() {
 
 				                      @Override
 				                      public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
@@ -1828,7 +1828,7 @@ class HttpServerTests extends BaseHttpTest {
 				                              .addSniMapping("*.test.com", domainSpec -> domainSpec.sslContext(testSslContextBuilder)))
 				          .doOnChannelInit((obs, channel, remoteAddress) ->
 				              channel.pipeline()
-				                     .addAfter(NettyPipeline.SslHandler, "test", new ChannelInboundHandlerAdapter() {
+				                     .addAfter(NettyPipeline.SslHandler, "test", new ChannelHandlerAdapter() {
 				                         @Override
 				                         public void userEventTriggered(ChannelHandlerContext ctx, Object evt) {
 				                             if (evt instanceof SniCompletionEvent) {
@@ -2125,7 +2125,7 @@ class HttpServerTests extends BaseHttpTest {
 		AtomicReference<List<ByteBuf>> replay = new AtomicReference<>(new ArrayList<>());
 		HttpServer server = serverCustomizer.apply(createServer());
 		disposableServer =
-				server.doOnConnection(conn -> conn.addHandlerLast(new ChannelInboundHandlerAdapter() {
+				server.doOnConnection(conn -> conn.addHandlerLast(new ChannelHandlerAdapter() {
 
 				              @Override
 				              public void channelRead(ChannelHandlerContext ctx, Object msg) {
