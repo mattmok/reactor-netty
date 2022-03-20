@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 VMware, Inc. or its affiliates, All Rights Reserved.
+ * Copyright (c) 2021-2022 VMware, Inc. or its affiliates, All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,16 +15,16 @@
  */
 package reactor.netty.http.server;
 
-import io.netty.handler.codec.http.HttpRequest;
-import io.netty.handler.codec.http.multipart.Attribute;
-import io.netty.handler.codec.http.multipart.DefaultHttpDataFactory;
-import io.netty.handler.codec.http.multipart.FileUpload;
-import io.netty.handler.codec.http.multipart.HttpData;
-import io.netty.handler.codec.http.multipart.HttpDataFactory;
-import io.netty.handler.codec.http.multipart.HttpPostMultipartRequestDecoder;
-import io.netty.handler.codec.http.multipart.HttpPostStandardRequestDecoder;
-import io.netty.handler.codec.http.multipart.InterfaceHttpData;
-import io.netty.handler.codec.http.multipart.InterfaceHttpPostRequestDecoder;
+import io.netty5.handler.codec.http.HttpRequest;
+import io.netty5.handler.codec.http.multipart.Attribute;
+import io.netty5.handler.codec.http.multipart.DefaultHttpDataFactory;
+import io.netty5.handler.codec.http.multipart.FileUpload;
+import io.netty5.handler.codec.http.multipart.HttpData;
+import io.netty5.handler.codec.http.multipart.HttpDataFactory;
+import io.netty5.handler.codec.http.multipart.HttpPostMultipartRequestDecoder;
+import io.netty5.handler.codec.http.multipart.HttpPostStandardRequestDecoder;
+import io.netty5.handler.codec.http.multipart.InterfaceHttpData;
+import io.netty5.handler.codec.http.multipart.InterfaceHttpPostRequestDecoder;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2021 VMware, Inc. or its affiliates, All Rights Reserved.
+ * Copyright (c) 2011-2022 VMware, Inc. or its affiliates, All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,21 +25,21 @@ import java.util.Objects;
 import java.util.regex.Pattern;
 
 import io.netty.buffer.ByteBufAllocator;
-import io.netty.handler.codec.http.HttpContent;
-import io.netty.handler.codec.http.HttpRequest;
-import io.netty.handler.codec.http.multipart.DiskAttribute;
-import io.netty.handler.codec.http.multipart.DiskFileUpload;
-import io.netty.handler.codec.http.multipart.FileUpload;
-import io.netty.handler.codec.http.multipart.HttpDataFactory;
-import io.netty.handler.codec.http.multipart.HttpPostRequestEncoder;
-import io.netty.handler.codec.http.multipart.MemoryFileUpload;
-import io.netty.handler.stream.ChunkedInput;
+import io.netty5.handler.codec.http.HttpContent;
+import io.netty5.handler.codec.http.HttpRequest;
+import io.netty5.handler.codec.http.multipart.DiskAttribute;
+import io.netty5.handler.codec.http.multipart.DiskFileUpload;
+import io.netty5.handler.codec.http.multipart.FileUpload;
+import io.netty5.handler.codec.http.multipart.HttpDataFactory;
+import io.netty5.handler.codec.http.multipart.HttpPostRequestEncoder;
+import io.netty5.handler.codec.http.multipart.MemoryFileUpload;
+import io.netty5.handler.stream.ChunkedInput;
 import reactor.core.Exceptions;
 import reactor.core.publisher.Sinks;
 import reactor.util.annotation.Nullable;
 
 /**
- * Modified {@link io.netty.handler.codec.http.multipart.HttpPostRequestEncoder} for
+ * Modified {@link io.netty5.handler.codec.http.multipart.HttpPostRequestEncoder} for
  * optional filename and builder support
  * <p>
  * This encoder will help to encode Request for a FORM as POST.

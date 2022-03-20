@@ -25,8 +25,8 @@ ext {
 			"Export-Package" : "reactor.netty.http*;version=$osgiVersion;-noimport:=true",
 			"Import-Package": [
 					"!javax.annotation",
-					"io.netty.channel.kqueue;resolution:=optional;version=\"[4.1,5)\"",
-					"io.netty.handler.codec.haproxy;resolution:=optional;version=\"[4.1,5)\"",
+					"io.netty5.channel.kqueue;resolution:=optional;version=\"[4.1,5)\"",
+					"io.netty.contrib.handler.codec.haproxy;resolution:=optional;version=\"[4.1,5)\"",
 					"io.netty.incubator.channel.uring;resolution:=optional",
 					"io.micrometer.*;resolution:=optional",
 					"*"
@@ -220,7 +220,45 @@ task japicmp(type: JapicmpTask) {
 			'reactor.netty.http.server.HttpServer#accessLog(java.util.function.Function)',
 			'reactor.netty.http.server.HttpServer#from(reactor.netty.tcp.TcpServer)',
 			'reactor.netty.http.server.HttpServer#tcpConfiguration(java.util.function.Function)',
-			'reactor.netty.http.server.logging.AccessLogArgProvider#zonedDateTime()'
+			'reactor.netty.http.server.logging.AccessLogArgProvider#zonedDateTime()',
+
+			// Changes related to Netty 5 package change
+			'reactor.netty.http.Cookies#newClientResponseHolder(io.netty.handler.codec.http.HttpHeaders, io.netty.handler.codec.http.cookie.ClientCookieDecoder)',
+			'reactor.netty.http.HttpInfos#method()',
+			'reactor.netty.http.HttpInfos#version()',
+			'reactor.netty.http.HttpResources#getOrCreateDefaultResolver()',
+
+			'reactor.netty.http.client.HttpClient#cookie(io.netty.handler.codec.http.cookie.Cookie)',
+			'reactor.netty.http.client.HttpClient#cookieCodec(io.netty.handler.codec.http.cookie.ClientCookieEncoder)',
+			'reactor.netty.http.client.HttpClient#cookieCodec(io.netty.handler.codec.http.cookie.ClientCookieEncoder, io.netty.handler.codec.http.cookie.ClientCookieDecoder)',
+			'reactor.netty.http.client.HttpClient#request(io.netty.handler.codec.http.HttpMethod)',
+			'reactor.netty.http.client.HttpClientConfig#cookieDecoder()',
+			'reactor.netty.http.client.HttpClientConfig#cookieEncoder()',
+			'reactor.netty.http.client.HttpClientConfig#defaultAddressResolverGroup()',
+			'reactor.netty.http.client.HttpClientConfig#headers()',
+			'reactor.netty.http.client.HttpClientConfig#method()',
+			'reactor.netty.http.client.HttpClientInfos#requestHeaders()',
+			'reactor.netty.http.client.HttpClientRequest#addCookie(io.netty.handler.codec.http.cookie.Cookie)',
+			'reactor.netty.http.client.HttpClientRequest#headers(io.netty.handler.codec.http.HttpHeaders)',
+			'reactor.netty.http.client.HttpClientResponse#responseHeaders()',
+			'reactor.netty.http.client.HttpClientResponse#status()',
+
+			'reactor.netty.http.server.HttpRouteHandlerMetadata#getMethod()',
+			'reactor.netty.http.server.HttpServer#channelGroup(io.netty.channel.group.ChannelGroup)',
+			'reactor.netty.http.server.HttpServer#cookieCodec(io.netty.handler.codec.http.cookie.ServerCookieEncoder)',
+			'reactor.netty.http.server.HttpServer#cookieCodec(io.netty.handler.codec.http.cookie.ServerCookieEncoder, io.netty.handler.codec.http.cookie.ServerCookieDecoder)',
+			'reactor.netty.http.server.HttpServerConfig#cookieDecoder()',
+			'reactor.netty.http.server.HttpServerConfig#cookieEncoder()',
+			'reactor.netty.http.server.HttpServerRequest#requestHeaders()',
+			'reactor.netty.http.server.HttpServerResponse#addCookie(io.netty.handler.codec.http.cookie.Cookie)',
+			'reactor.netty.http.server.HttpServerResponse#headers(io.netty.handler.codec.http.HttpHeaders)',
+			'reactor.netty.http.server.HttpServerResponse#responseHeaders()',
+			'reactor.netty.http.server.HttpServerResponse#status()',
+			'reactor.netty.http.server.HttpServerResponse#status(io.netty.handler.codec.http.HttpResponseStatus)',
+			'reactor.netty.http.server.ServerCookies#newServerRequestHolder(io.netty.handler.codec.http.HttpHeaders, io.netty.handler.codec.http.cookie.ServerCookieDecoder)',
+			'reactor.netty.http.server.logging.AccessLogHandlerFactory#create(java.util.function.Function)',
+
+			'reactor.netty.http.websocket.WebsocketInbound#headers()',
 	]
 }
 

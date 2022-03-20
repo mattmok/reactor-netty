@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2021 VMware, Inc. or its affiliates, All Rights Reserved.
+ * Copyright (c) 2017-2022 VMware, Inc. or its affiliates, All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,8 @@ import java.io.File;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 
-import io.netty.handler.codec.http.multipart.HttpDataFactory;
-import io.netty.handler.codec.http.multipart.HttpPostRequestEncoder;
+import io.netty5.handler.codec.http.multipart.HttpDataFactory;
+import io.netty5.handler.codec.http.multipart.HttpPostRequestEncoder;
 import reactor.util.annotation.Nullable;
 
 /**
