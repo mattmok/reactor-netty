@@ -17,9 +17,7 @@ package reactor.netty.http.client;
 
 import java.net.URI;
 import java.util.Objects;
-import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 import io.netty.buffer.ByteBuf;
@@ -33,7 +31,6 @@ import reactor.netty.ByteBufMono;
 import reactor.netty.Connection;
 import reactor.netty.NettyOutbound;
 import reactor.netty.channel.ChannelOperations;
-import reactor.util.annotation.Nullable;
 
 /**
  * Configures the HTTP request before calling one of the terminal,
@@ -135,15 +132,6 @@ final class HttpClientFinalizer extends HttpClientConnect implements HttpClient.
 	public HttpClientFinalizer send(Publisher<? extends ByteBuf> requestBody) {
 		Objects.requireNonNull(requestBody, "requestBody");
 		return send((req, out) -> out.send(requestBody));
-	}
-
-	@Override
-	public HttpClientFinalizer sendForm(BiConsumer<? super HttpClientRequest, HttpClientForm> formCallback, @Nullable Consumer<Flux<Long>> progress) {
-		Objects.requireNonNull(formCallback, "formCallback");
-		return send((req, out) -> {
-			HttpClientOperations ops = (HttpClientOperations) out;
-			return new HttpClientOperations.SendForm(ops, formCallback, progress);
-		});
 	}
 
 	@Override

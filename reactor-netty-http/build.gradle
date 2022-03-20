@@ -222,6 +222,10 @@ task japicmp(type: JapicmpTask) {
 			'reactor.netty.http.server.HttpServer#tcpConfiguration(java.util.function.Function)',
 			'reactor.netty.http.server.logging.AccessLogArgProvider#zonedDateTime()',
 
+			// TODO temporary disable multipart on the client
+			'reactor.netty.http.client.HttpClient$RequestSender#sendForm(java.util.function.BiConsumer)',
+			'reactor.netty.http.client.HttpClient$RequestSender#sendForm(java.util.function.BiConsumer, java.util.function.Consumer)'
+
 			// Changes related to Netty 5 package change
 			'reactor.netty.http.Cookies#newClientResponseHolder(io.netty.handler.codec.http.HttpHeaders, io.netty.handler.codec.http.cookie.ClientCookieDecoder)',
 			'reactor.netty.http.HttpInfos#method()',
@@ -259,6 +263,10 @@ task japicmp(type: JapicmpTask) {
 			'reactor.netty.http.server.logging.AccessLogHandlerFactory#create(java.util.function.Function)',
 
 			'reactor.netty.http.websocket.WebsocketInbound#headers()',
+	]
+	classExcludes = [
+			// TODO temporary disable multipart on the client
+			'reactor.netty.http.client.HttpClientForm'
 	]
 }
 

@@ -30,12 +30,7 @@ import reactor.netty.ByteBufFlux;
 import reactor.netty.TomcatServer;
 import reactor.netty.resources.ConnectionProvider;
 import reactor.util.function.Tuple2;
-import reactor.util.function.Tuples;
 
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -83,32 +78,6 @@ class HttpClientWithTomcatTest {
 		assertThat(response)
 				.isNotNull()
 				.contains("q=test%20d%20dq");
-	}
-
-	@Test
-	void postUpload() throws Exception {
-		HttpClient client =
-				HttpClient.create()
-				          .host("localhost")
-				          .port(getPort())
-				          .wiretap(true);
-
-		Tuple2<Integer, String> res;
-		Path file = Paths.get(getClass().getResource("/smallFile.txt").toURI());
-		try (InputStream f = Files.newInputStream(file)) {
-			res = client.post()
-			            .uri("/multipart")
-			            .sendForm((req, form) -> form.multipart(true)
-			                                         .file("test", f)
-			                                         .attr("attr1", "attr2")
-			                                         .file("test2", f))
-			            .responseSingle((r, buf) -> buf.asString().map(s -> Tuples.of(r.status().code(), s)))
-			            .block(Duration.ofSeconds(30));
-		}
-
-		assertThat(res).as("response").isNotNull();
-		assertThat(res.getT1()).as("status code").isEqualTo(200);
-		assertThat(res.getT2()).as("response body reflecting request").contains("test attr1 test2 ");
 	}
 
 	@Test
