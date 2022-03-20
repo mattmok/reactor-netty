@@ -20,7 +20,7 @@ import io.micrometer.core.instrument.docs.DocumentedMeter;
 import io.micrometer.common.docs.TagKey;
 
 /**
- * {@link io.netty.channel.EventLoop} meters.
+ * {@link io.netty5.channel.EventLoop} meters.
  *
  * @author Violeta Georgieva
  * @since 1.1.0

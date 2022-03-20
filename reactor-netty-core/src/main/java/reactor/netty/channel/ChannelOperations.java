@@ -25,9 +25,9 @@ import java.util.function.Predicate;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelHandler;
-import io.netty.channel.ChannelHandlerContext;
+import io.netty5.channel.Channel;
+import io.netty5.channel.ChannelHandler;
+import io.netty5.channel.ChannelHandlerContext;
 import io.netty.util.ReferenceCounted;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscription;

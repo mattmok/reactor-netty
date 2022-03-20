@@ -16,13 +16,13 @@
 package reactor.netty.tcp;
 
 import io.netty.buffer.ByteBufAllocator;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelPipeline;
-import io.netty.handler.ssl.SniHandler;
-import io.netty.handler.ssl.SslContext;
-import io.netty.handler.ssl.SslHandler;
-import io.netty.util.DomainWildcardMappingBuilder;
-import io.netty.util.Mapping;
+import io.netty5.channel.Channel;
+import io.netty5.channel.ChannelPipeline;
+import io.netty5.handler.ssl.SniHandler;
+import io.netty5.handler.ssl.SslContext;
+import io.netty5.handler.ssl.SslHandler;
+import io.netty5.util.DomainWildcardMappingBuilder;
+import io.netty5.util.Mapping;
 import reactor.netty.NettyPipeline;
 
 import java.util.Map;

@@ -16,9 +16,9 @@
 package reactor.netty.resources;
 
 import io.micrometer.contextpropagation.ContextContainer;
-import io.netty.channel.Channel;
-import io.netty.channel.EventLoop;
-import io.netty.resolver.AddressResolverGroup;
+import io.netty5.channel.Channel;
+import io.netty5.channel.EventLoop;
+import io.netty5.resolver.AddressResolverGroup;
 import org.reactivestreams.Publisher;
 import reactor.core.CoreSubscriber;
 import reactor.core.Disposable;

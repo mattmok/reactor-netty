@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2021 VMware, Inc. or its affiliates, All Rights Reserved.
+ * Copyright (c) 2011-2022 VMware, Inc. or its affiliates, All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,14 +25,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelPromise;
-import io.netty.channel.EventLoop;
-import io.netty.channel.EventLoopGroup;
-import io.netty.util.concurrent.EventExecutor;
-import io.netty.util.concurrent.FastThreadLocal;
-import io.netty.util.concurrent.ScheduledFuture;
+import io.netty5.channel.Channel;
+import io.netty5.channel.ChannelFuture;
+import io.netty5.channel.ChannelPromise;
+import io.netty5.channel.EventLoop;
+import io.netty5.channel.EventLoopGroup;
+import io.netty5.util.concurrent.EventExecutor;
+import io.netty5.util.concurrent.FastThreadLocal;
+import io.netty5.util.concurrent.ScheduledFuture;
 
 /**
  * Reuse local event loop if already working inside one.
@@ -175,13 +175,13 @@ final class ColocatedEventLoopGroup implements EventLoopGroup, Supplier<EventLoo
 	}
 
 	@Override
-	public io.netty.util.concurrent.Future<?> shutdownGracefully() {
+	public io.netty5.util.concurrent.Future<?> shutdownGracefully() {
 		clean();
 		return eventLoopGroup.shutdownGracefully();
 	}
 
 	@Override
-	public io.netty.util.concurrent.Future<?> shutdownGracefully(long quietPeriod, long timeout, TimeUnit unit) {
+	public io.netty5.util.concurrent.Future<?> shutdownGracefully(long quietPeriod, long timeout, TimeUnit unit) {
 		clean();
 		return eventLoopGroup.shutdownGracefully(quietPeriod, timeout, unit);
 	}
@@ -194,22 +194,22 @@ final class ColocatedEventLoopGroup implements EventLoopGroup, Supplier<EventLoo
 	}
 
 	@Override
-	public <T> io.netty.util.concurrent.Future<T> submit(Callable<T> task) {
+	public <T> io.netty5.util.concurrent.Future<T> submit(Callable<T> task) {
 		return next().submit(task);
 	}
 
 	@Override
-	public io.netty.util.concurrent.Future<?> submit(Runnable task) {
+	public io.netty5.util.concurrent.Future<?> submit(Runnable task) {
 		return next().submit(task);
 	}
 
 	@Override
-	public <T> io.netty.util.concurrent.Future<T> submit(Runnable task, T result) {
+	public <T> io.netty5.util.concurrent.Future<T> submit(Runnable task, T result) {
 		return next().submit(task, result);
 	}
 
 	@Override
-	public io.netty.util.concurrent.Future<?> terminationFuture() {
+	public io.netty5.util.concurrent.Future<?> terminationFuture() {
 		return eventLoopGroup.terminationFuture();
 	}
 
