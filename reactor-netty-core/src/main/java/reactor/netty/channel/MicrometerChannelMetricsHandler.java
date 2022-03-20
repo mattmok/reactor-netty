@@ -21,7 +21,6 @@ import io.micrometer.observation.Observation;
 import io.micrometer.common.Tags;
 import io.netty5.channel.ChannelHandler;
 import io.netty5.channel.ChannelHandlerContext;
-import io.netty5.channel.ChannelInboundHandler;
 import io.netty5.channel.ChannelOutboundHandler;
 import io.netty5.channel.ChannelPromise;
 import io.netty5.handler.ssl.SslHandler;
@@ -197,7 +196,7 @@ public final class MicrometerChannelMetricsHandler extends AbstractChannelMetric
 		}
 	}
 
-	static final class TlsMetricsHandler extends Observation.Context implements ReactorNettyHandlerContext, ChannelInboundHandler {
+	static final class TlsMetricsHandler extends Observation.Context implements ReactorNettyHandlerContext, ChannelHandler {
 		static final String CONTEXTUAL_NAME = "tls handshake";
 		static final String TYPE_CLIENT = "client";
 		static final String TYPE_SERVER = "server";
@@ -235,42 +234,6 @@ public final class MicrometerChannelMetricsHandler extends AbstractChannelMetric
 		}
 
 		@Override
-		public void channelInactive(ChannelHandlerContext ctx) {
-			ctx.fireChannelInactive();
-		}
-
-		@Override
-		public void channelRead(ChannelHandlerContext ctx, Object msg) {
-			ctx.fireChannelRead(msg);
-		}
-
-		@Override
-		public void channelReadComplete(ChannelHandlerContext ctx) {
-			ctx.fireChannelReadComplete();
-		}
-
-		@Override
-		public void channelRegistered(ChannelHandlerContext ctx) {
-			ctx.fireChannelRegistered();
-		}
-
-		@Override
-		public void channelUnregistered(ChannelHandlerContext ctx) {
-			ctx.fireChannelUnregistered();
-		}
-
-		@Override
-		public void channelWritabilityChanged(ChannelHandlerContext ctx) {
-			ctx.fireChannelWritabilityChanged();
-		}
-
-		@Override
-		@SuppressWarnings("deprecation")
-		public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-			ctx.fireExceptionCaught(cause);
-		}
-
-		@Override
 		public String getContextualName() {
 			return CONTEXTUAL_NAME;
 		}
@@ -283,21 +246,6 @@ public final class MicrometerChannelMetricsHandler extends AbstractChannelMetric
 		@Override
 		public Tags getLowCardinalityTags() {
 			return Tags.of(REMOTE_ADDRESS.of(remoteAddress), STATUS.of(status));
-		}
-
-		@Override
-		public void handlerAdded(ChannelHandlerContext ctx) {
-			// noop
-		}
-
-		@Override
-		public void handlerRemoved(ChannelHandlerContext ctx) {
-			// noop
-		}
-
-		@Override
-		public void userEventTriggered(ChannelHandlerContext ctx, Object evt) {
-			ctx.fireUserEventTriggered(evt);
 		}
 
 		@Override
