@@ -18,7 +18,6 @@ package reactor.netty.udp;
 import io.netty5.channel.Channel;
 import io.netty5.channel.ChannelFactory;
 import io.netty5.channel.ChannelOption;
-import io.netty5.channel.EventLoopGroup;
 import io.netty5.channel.socket.DatagramChannel;
 import io.netty5.channel.socket.InternetProtocolFamily;
 import io.netty5.channel.socket.nio.NioDatagramChannel;
@@ -84,12 +83,12 @@ public final class UdpClientConfig extends ClientTransportConfig<UdpClientConfig
 	}
 
 	@Override
-	protected ChannelFactory<? extends Channel> connectionFactory(EventLoopGroup elg, boolean isDomainSocket) {
+	protected ChannelFactory<? extends Channel> connectionFactory(boolean isDomainSocket) {
 		if (isPreferNative()) {
-			return super.connectionFactory(elg, isDomainSocket);
+			return super.connectionFactory(isDomainSocket);
 		}
 		else {
-			return () -> new NioDatagramChannel(family());
+			return el -> new NioDatagramChannel(el, family());
 		}
 	}
 

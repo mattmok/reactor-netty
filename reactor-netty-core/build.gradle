@@ -208,11 +208,21 @@ task japicmp(type: JapicmpTask) {
 			'reactor.netty.Connection#addHandler(java.lang.String, io.netty.channel.ChannelHandler)',
 			'reactor.netty.NettyPipeline#inboundHandler(java.util.function.BiConsumer)',
 
+			'reactor.netty.resources.LoopResources#onChannel(java.lang.Class, io.netty.channel.EventLoopGroup)',
+			'reactor.netty.resources.LoopResources#onChannel(java.lang.Class, io.netty5.channel.EventLoop)', // new default method
+			'reactor.netty.resources.LoopResources#onChannelClass(java.lang.Class, io.netty.channel.EventLoopGroup)',
+			'reactor.netty.resources.LoopResources#onServerChannel(java.lang.Class, io.netty5.channel.EventLoop, io.netty5.channel.EventLoopGroup)', // new default method
+
 			'reactor.netty.tcp.SslProvider$SslContextSpec#sslContext(io.netty.handler.ssl.SslContextBuilder)',
 			'reactor.netty.tcp.SslProvider#getDefaultConfigurationType()',
 			'reactor.netty.tcp.SslProvider#updateDefaultConfiguration(reactor.netty.tcp.SslProvider, reactor.netty.tcp.SslProvider$DefaultConfigurationType)',
+			'reactor.netty.tcp.TcpResources#onChannel(java.lang.Class, io.netty.channel.EventLoopGroup)',
+			'reactor.netty.tcp.TcpResources#onChannelClass(java.lang.Class, io.netty.channel.EventLoopGroup)',
 			'reactor.netty.tcp.TcpClient#addressSupplier(java.util.function.Supplier)',
 			'reactor.netty.tcp.TcpClient#bootstrap(java.util.function.Function)',
+
+			'reactor.netty.udp.UdpResources#onChannel(java.lang.Class, io.netty.channel.EventLoopGroup)',
+			'reactor.netty.udp.UdpResources#onChannelClass(java.lang.Class, io.netty.channel.EventLoopGroup)',
 
 			// Changes related to Netty 5 package change
 			'reactor.netty.ChannelPipelineConfigurer#onChannelInit(reactor.netty.ConnectionObserver, io.netty.channel.Channel, java.net.SocketAddress)',
@@ -248,7 +258,6 @@ task japicmp(type: JapicmpTask) {
 
 			'reactor.netty.resources.ConnectionProvider#acquire(reactor.netty.transport.TransportConfig, reactor.netty.ConnectionObserver, java.util.function.Supplier, io.netty.resolver.AddressResolverGroup)',
 			'reactor.netty.resources.LoopResources#colocate(io.netty.channel.EventLoopGroup)',
-			'reactor.netty.resources.LoopResources#onChannel(java.lang.Class, io.netty.channel.EventLoopGroup)',
 			'reactor.netty.resources.LoopResources#colocate(io.netty5.channel.EventLoopGroup)', // new default method
 			'reactor.netty.resources.LoopResources#onClient(boolean)',
 			'reactor.netty.resources.LoopResources#onServer(boolean)',
@@ -266,7 +275,6 @@ task japicmp(type: JapicmpTask) {
 			'reactor.netty.tcp.TcpClient#resolver(io.netty.resolver.AddressResolverGroup)',
 			'reactor.netty.tcp.TcpClient#runOn(io.netty.channel.EventLoopGroup)',
 			'reactor.netty.tcp.TcpClient#wiretap(java.lang.String, io.netty.handler.logging.LogLevel)',
-			'reactor.netty.tcp.TcpResources#onChannel(java.lang.Class, io.netty.channel.EventLoopGroup)',
 			'reactor.netty.tcp.TcpResources#acquire(reactor.netty.transport.TransportConfig, reactor.netty.ConnectionObserver, java.util.function.Supplier, io.netty.resolver.AddressResolverGroup)',
 			'reactor.netty.tcp.TcpResources#onClient(boolean)',
 			'reactor.netty.tcp.TcpResources#onServer(boolean)',
