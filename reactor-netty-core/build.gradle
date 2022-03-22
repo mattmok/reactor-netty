@@ -328,6 +328,7 @@ task japicmp(type: JapicmpTask) {
 			'reactor.netty.udp.UdpServerConfig#family()'
 	]
 	classExcludes = [
+			'reactor.netty.FutureMono',
 			'reactor.netty.tcp.SslProvider$DefaultConfigurationSpec',
 			'reactor.netty.tcp.SslProvider$DefaultConfigurationType'
 	]
