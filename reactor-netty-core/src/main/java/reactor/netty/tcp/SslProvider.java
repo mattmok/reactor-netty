@@ -610,11 +610,6 @@ public final class SslProvider {
 		public void userEventTriggered(ChannelHandlerContext ctx, Object evt) {
 			if (evt instanceof SslHandshakeCompletionEvent) {
 				handshakeDone = true;
-				if (ctx.pipeline()
-				       .context(this) != null) {
-					ctx.pipeline()
-					   .remove(this);
-				}
 				SslHandshakeCompletionEvent handshake = (SslHandshakeCompletionEvent) evt;
 				if (handshake.isSuccess()) {
 					ctx.fireChannelActive();
@@ -624,6 +619,9 @@ public final class SslProvider {
 				}
 			}
 			ctx.fireUserEventTriggered(evt);
+			if (handshakeDone && ctx.pipeline().context(this) != null) {
+				ctx.pipeline().remove(this);
+			}
 		}
 	}
 
