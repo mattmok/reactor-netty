@@ -118,6 +118,7 @@ import reactor.util.function.Tuple3;
 
 import javax.net.ssl.SNIHostName;
 
+import static io.netty5.buffer.api.DefaultBufferAllocators.preferredAllocator;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.fail;
@@ -270,9 +271,7 @@ class HttpServerTests extends BaseHttpTest {
 		                             .bindNow();
 
 		DefaultFullHttpRequest request =
-				new DefaultFullHttpRequest(HttpVersion.HTTP_1_1,
-				                           HttpMethod.GET,
-				                           "/plaintext");
+				new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "/plaintext", preferredAllocator().allocate(0));
 
 		CountDownLatch latch = new CountDownLatch(6);
 
@@ -294,9 +293,9 @@ class HttpServerTests extends BaseHttpTest {
 				                       }
 				                   });
 
-				                 return out.sendObject(Flux.just(request.retain(),
-				                                                 request.retain(),
-				                                                 request.retain()))
+				                 return out.sendObject(Flux.just(request.send(),
+				                                                 request.send(),
+				                                                 request.send()))
 				                           .neverComplete();
 				         })
 				         .wiretap(true)
@@ -1409,7 +1408,7 @@ class HttpServerTests extends BaseHttpTest {
 				          .bindNow();
 
 		DefaultFullHttpRequest request =
-				new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "/");
+				new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "/", preferredAllocator().allocate(0));
 
 		CountDownLatch latch = new CountDownLatch(1);
 
@@ -1785,7 +1784,7 @@ class HttpServerTests extends BaseHttpTest {
 				null,
 				false);
 		ops.status(status);
-		HttpMessage response = ops.newFullBodyMessage(Unpooled.EMPTY_BUFFER);
+		HttpMessage response = ops.newFullBodyMessage(channel.bufferAllocator().allocate(0));
 		assertThat(((FullHttpResponse) response).status().reasonPhrase()).isEqualTo(status.reasonPhrase());
 		// "FutureReturnValueIgnored" is suppressed deliberately
 		channel.close();
