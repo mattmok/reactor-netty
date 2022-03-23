@@ -124,20 +124,18 @@ final class WebsocketClientOperations extends HttpClientOperations
 				}
 				finally {
 					//Release unused content (101 status)
-					response.content()
-					        .release();
+					response.close();
 				}
 			}
 			else {
-				response.content()
-				        .release();
+				response.close();
 				listener().onUncaughtException(this, redirecting);
 			}
 			return;
 		}
 		if (!this.proxyPing && msg instanceof PingWebSocketFrame) {
 			//"FutureReturnValueIgnored" this is deliberate
-			ctx.writeAndFlush(new PongWebSocketFrame(((PingWebSocketFrame) msg).content()));
+			ctx.writeAndFlush(new PongWebSocketFrame(((PingWebSocketFrame) msg).binaryData()));
 			ctx.read();
 			return;
 		}
@@ -147,7 +145,7 @@ final class WebsocketClientOperations extends HttpClientOperations
 				log.debug(format(channel(), "CloseWebSocketFrame detected. Closing Websocket"));
 			}
 			CloseWebSocketFrame closeFrame = new CloseWebSocketFrame(true, ((CloseWebSocketFrame) msg).rsv(),
-					((CloseWebSocketFrame) msg).content());
+					((CloseWebSocketFrame) msg).binaryData());
 			if (closeFrame.statusCode() != -1) {
 				sendCloseNow(closeFrame);
 			}
@@ -241,11 +239,11 @@ final class WebsocketClientOperations extends HttpClientOperations
 					                .addListener(channel(), ChannelFutureListeners.CLOSE)
 					                .asStage();
 				}
-				frame.release();
+				frame.close();
 				return channel().newSucceededFuture().asStage();
 			}).doOnCancel(() -> ReactorNetty.safeRelease(frame));
 		}
-		frame.release();
+		frame.close();
 		return Mono.empty();
 	}
 
@@ -270,7 +268,7 @@ final class WebsocketClientOperations extends HttpClientOperations
 			         .addListener(channel(), ChannelFutureListeners.CLOSE);
 		}
 		else {
-			frame.release();
+			frame.close();
 		}
 	}
 
