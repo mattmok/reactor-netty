@@ -35,6 +35,7 @@ import javax.net.ssl.SSLException;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
+import io.netty5.buffer.api.BufferAllocator;
 import io.netty5.channel.ChannelHandlerContext;
 import io.netty5.channel.DefaultFileRegion;
 import io.netty5.channel.FileRegion;
@@ -54,6 +55,7 @@ import org.junit.jupiter.api.Test;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
 
+import static io.netty5.buffer.api.DefaultBufferAllocators.preferredAllocator;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class NettyOutboundTest {
@@ -113,6 +115,10 @@ class NettyOutboundTest {
 				return ByteBufAllocator.DEFAULT;
 			}
 
+			@Override
+			public BufferAllocator bufferAlloc() {
+				return preferredAllocator();
+			}
 
 			@Override
 			public <S> NettyOutbound sendUsing(Callable<? extends S> sourceInput,
@@ -200,6 +206,11 @@ class NettyOutboundTest {
 			@Override
 			public ByteBufAllocator alloc() {
 				return ByteBufAllocator.DEFAULT;
+			}
+
+			@Override
+			public BufferAllocator bufferAlloc() {
+				return preferredAllocator();
 			}
 
 			@Override
@@ -291,6 +302,11 @@ class NettyOutboundTest {
 			@Override
 			public ByteBufAllocator alloc() {
 				return ByteBufAllocator.DEFAULT;
+			}
+
+			@Override
+			public BufferAllocator bufferAlloc() {
+				return preferredAllocator();
 			}
 
 			@Override
