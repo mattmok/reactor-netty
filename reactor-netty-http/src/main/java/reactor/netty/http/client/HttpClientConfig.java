@@ -86,6 +86,7 @@ import reactor.util.Loggers;
 import reactor.util.annotation.Nullable;
 import reactor.util.context.Context;
 
+import static io.netty5.handler.adaptor.BufferConversionHandler.byteBufToBuffer;
 import static reactor.netty.ReactorNetty.format;
 import static reactor.netty.http.client.Http2ConnectionProvider.OWNER;
 
@@ -588,6 +589,7 @@ public final class HttpClientConfig extends ClientTransportConfig<HttpClientConf
 			HttpResponseDecoderSpec decoder,
 			@Nullable ChannelMetricsRecorder metricsRecorder,
 			@Nullable Function<String, String> uriTagValue) {
+		p.addBefore(NettyPipeline.ReactiveBridge, "byteBufToBuffer", byteBufToBuffer()); // TODO temporary SslHandler is not migrated to Buffer
 		p.addBefore(NettyPipeline.ReactiveBridge,
 				NettyPipeline.HttpCodec,
 				new HttpClientCodec(

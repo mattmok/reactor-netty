@@ -76,6 +76,7 @@ import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import static io.netty5.handler.adaptor.BufferConversionHandler.byteBufToBuffer;
 import static reactor.netty.ReactorNetty.ACCESS_LOG_ENABLED;
 import static reactor.netty.ReactorNetty.format;
 import static reactor.netty.http.server.HttpServerFormDecoderProvider.DEFAULT_FORM_DECODER_SPEC;
@@ -636,7 +637,8 @@ public final class HttpServerConfig extends ServerTransportConfig<HttpServerConf
 			@Nullable ChannelMetricsRecorder metricsRecorder,
 			int minCompressionSize,
 			@Nullable Function<String, String> uriTagValue) {
-		p.addBefore(NettyPipeline.ReactiveBridge,
+		p.addBefore(NettyPipeline.ReactiveBridge, "byteBufToBuffer", byteBufToBuffer()) // TODO temporary SslHandler is not migrated to Buffer
+		 .addBefore(NettyPipeline.ReactiveBridge,
 		            NettyPipeline.HttpCodec,
 		            new HttpServerCodec(decoder.maxInitialLineLength(), decoder.maxHeaderSize(),
 		                    decoder.validateHeaders(), decoder.initialBufferSize(),

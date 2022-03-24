@@ -29,6 +29,8 @@ import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.ByteBufHolder;
 import io.netty.buffer.CompositeByteBuf;
 import io.netty.buffer.Unpooled;
+import io.netty5.handler.codec.http.HttpContent;
+import io.netty5.handler.codec.http.websocketx.WebSocketFrame;
 import io.netty5.util.IllegalReferenceCountException;
 import org.reactivestreams.Publisher;
 import reactor.core.CoreSubscriber;
@@ -38,6 +40,8 @@ import reactor.core.publisher.FluxOperator;
 import reactor.core.publisher.Mono;
 import reactor.util.Logger;
 import reactor.util.Loggers;
+
+import static io.netty5.buffer.api.adaptor.ByteBufAdaptor.intoByteBuf;
 
 /**
  * A decorating {@link Flux} {@link NettyInbound} with various {@link ByteBuf} related
@@ -356,6 +360,12 @@ public class ByteBufFlux extends FluxOperator<ByteBuf, ByteBuf> {
 		}
 		if (o instanceof ByteBufHolder) {
 			return ((ByteBufHolder) o).content();
+		}
+		if (o instanceof HttpContent) {
+			return intoByteBuf(((HttpContent<?>) o).payload());
+		}
+		if (o instanceof WebSocketFrame) {
+			return intoByteBuf(((WebSocketFrame) o).binaryData());
 		}
 		if (o instanceof byte[]) {
 			return Unpooled.wrappedBuffer((byte[]) o);
