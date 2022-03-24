@@ -17,7 +17,6 @@ package reactor.netty.http.client;
 
 import io.netty5.handler.codec.http.websocketx.WebSocketClientHandshakeException;
 import io.netty5.handler.codec.http.websocketx.WebSocketHandshakeException;
-import io.netty5.handler.codec.http.websocketx.WebSocketVersion;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -28,11 +27,6 @@ import reactor.netty.http.server.WebsocketServerSpec;
 import reactor.test.StepVerifier;
 
 import java.time.Duration;
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
-import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 
 /**
  * @author Violeta Georgieva
@@ -89,34 +83,6 @@ class WebsocketClientOperationsTest extends BaseHttpTest {
 		                 .post()
 		                 .uri("/login")
 		                 .responseSingle((res, buf) -> Mono.just(res.status().code() + ""));
-	}
-
-	@Test
-	void testConfigureWebSocketVersion() {
-		disposableServer = createServer()
-				.handle((in, out) -> out.sendWebsocket((i, o) ->
-						o.sendString(Mono.just(in.requestHeaders().get("sec-websocket-version")))))
-				.bindNow();
-
-		List<String> response = createClient(disposableServer.port())
-				.websocket(WebsocketClientSpec.builder().version(WebSocketVersion.V08).build())
-				.uri("/test")
-				.handle((in, out) -> in.receive().aggregate().asString())
-				.collectList()
-				.block(Duration.ofSeconds(10));
-
-		assertThat(response).hasSize(1);
-		assertThat(response.get(0)).isEqualTo("8");
-	}
-
-	@Test
-	void testNullWebSocketVersionShouldFail() {
-		assertThatNullPointerException().isThrownBy(() -> WebsocketClientSpec.builder().version(null).build());
-	}
-
-	@Test
-	void testUnknownWebSocketVersionShouldFail() {
-		assertThatIllegalArgumentException().isThrownBy(() -> WebsocketClientSpec.builder().version(WebSocketVersion.UNKNOWN).build());
 	}
 
 	@Test

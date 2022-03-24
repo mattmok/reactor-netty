@@ -34,6 +34,7 @@ import io.netty5.handler.codec.http.websocketx.WebSocketClientHandshakeException
 import io.netty5.handler.codec.http.websocketx.WebSocketClientHandshaker;
 import io.netty5.handler.codec.http.websocketx.WebSocketClientHandshakerFactory;
 import io.netty5.handler.codec.http.websocketx.WebSocketCloseStatus;
+import io.netty5.handler.codec.http.websocketx.WebSocketVersion;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -70,7 +71,7 @@ final class WebsocketClientOperations extends HttpClientOperations
 
 		String subprotocols = websocketClientSpec.protocols();
 		handshaker = WebSocketClientHandshakerFactory.newHandshaker(currentURI,
-					websocketClientSpec.version(),
+					WebSocketVersion.V13,
 					subprotocols != null && !subprotocols.isEmpty() ? subprotocols : null,
 					true,
 					replaced.requestHeaders()

@@ -15,7 +15,6 @@
  */
 package reactor.netty.http.client;
 
-import io.netty5.handler.codec.http.websocketx.WebSocketVersion;
 import reactor.netty.http.websocket.WebsocketSpecImpl;
 
 /**
@@ -24,15 +23,7 @@ import reactor.netty.http.websocket.WebsocketSpecImpl;
  */
 final class WebsocketClientSpecImpl extends WebsocketSpecImpl implements WebsocketClientSpec {
 
-	private final WebSocketVersion version;
-
-	@Override
-	public WebSocketVersion version() {
-		return version;
-	}
-
 	WebsocketClientSpecImpl(WebsocketClientSpec.Builder builder) {
 		super(builder);
-		this.version = builder.version;
 	}
 }
