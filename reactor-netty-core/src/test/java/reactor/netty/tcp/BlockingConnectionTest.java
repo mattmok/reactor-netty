@@ -89,7 +89,7 @@ class BlockingConnectionTest {
 	void simpleServerFromAsyncServer() {
 		DisposableServer simpleServer =
 				TcpServer.create()
-				         .handle((in, out) -> out.sendString(in.receive()
+				         .handle((in, out) -> out.sendString(in.receiveBuffer()
 				                                               .asString()
 				                                               .takeUntil(s -> s.endsWith("CONTROL"))
 				                                               .map(s -> "ECHO: " + s.replaceAll("CONTROL", ""))
@@ -106,7 +106,7 @@ class BlockingConnectionTest {
 		Connection simpleClient1 =
 				TcpClient.create().port(address.getPort())
 				         .handle((in, out) -> out.sendString(Flux.just("Hello", "World", "CONTROL"))
-				                                 .then(in.receive()
+				                                 .then(in.receiveBuffer()
 				                                         .asString()
 				                                         .takeUntil(s -> s.endsWith("DONE"))
 				                                         .map(s -> s.replaceAll("DONE", ""))
@@ -122,7 +122,7 @@ class BlockingConnectionTest {
 				TcpClient.create()
 				         .port(address.getPort())
 				         .handle((in, out) -> out.sendString(Flux.just("How", "Are", "You?", "CONTROL"))
-				                                 .then(in.receive()
+				                                 .then(in.receiveBuffer()
 				                                         .asString()
 				                                         .takeUntil(s -> s.endsWith("DONE"))
 				                                         .map(s -> s.replaceAll("DONE", ""))

@@ -22,9 +22,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
 
-import io.netty.buffer.ByteBufAllocator;
-import io.netty.buffer.PooledByteBufAllocator;
-import io.netty.buffer.UnpooledByteBufAllocator;
 import io.netty5.channel.Channel;
 import io.netty5.channel.ChannelFactory;
 import io.netty5.channel.ChannelInitializer;
@@ -386,13 +383,14 @@ public abstract class TransportConfig {
 				ChannelOperations.addMetricsHandler(channel, config.metricsRecorder, remoteAddress, onServer);
 
 				if (Metrics.isInstrumentationAvailable()) {
-					ByteBufAllocator alloc = channel.alloc();
-					if (alloc instanceof PooledByteBufAllocator) {
-						ByteBufAllocatorMetrics.INSTANCE.registerMetrics("pooled", ((PooledByteBufAllocator) alloc).metric(), alloc);
-					}
-					else if (alloc instanceof UnpooledByteBufAllocator) {
-						ByteBufAllocatorMetrics.INSTANCE.registerMetrics("unpooled", ((UnpooledByteBufAllocator) alloc).metric(), alloc);
-					}
+					// TODO disable for the moment
+					// ByteBufAllocator alloc = channel.alloc();
+					// if (alloc instanceof PooledByteBufAllocator) {
+					// 	ByteBufAllocatorMetrics.INSTANCE.registerMetrics("pooled", ((PooledByteBufAllocator) alloc).metric(), alloc);
+					// }
+					// else if (alloc instanceof UnpooledByteBufAllocator) {
+					// 	ByteBufAllocatorMetrics.INSTANCE.registerMetrics("unpooled", ((UnpooledByteBufAllocator) alloc).metric(), alloc);
+					// }
 
 					MicrometerEventLoopMeterRegistrar.INSTANCE.registerMetrics(channel.executor());
 				}

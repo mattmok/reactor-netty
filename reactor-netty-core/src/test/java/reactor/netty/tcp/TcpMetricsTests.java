@@ -112,7 +112,7 @@ class TcpMetricsTests {
 		CountDownLatch latch = new CountDownLatch(2);
 		disposableServer =
 				tcpServer.handle((in, out) -> {
-				             in.receive()
+				             in.receiveBuffer()
 				               .asString()
 				               .subscribe(s -> {
 				                 if ("hello".equals(s)) {
@@ -132,7 +132,7 @@ class TcpMetricsTests {
 		          .subscribe();
 
 		connection.inbound()
-		          .receive()
+		          .receiveBuffer()
 		          .asString()
 		          .subscribe(s -> {
 		              if ("hello".equals(s)) {
@@ -181,7 +181,7 @@ class TcpMetricsTests {
 		CountDownLatch latch = new CountDownLatch(2);
 		disposableServer =
 				tcpServer.handle((in, out) -> {
-				             in.receive()
+				             in.receiveBuffer()
 				               .asString()
 				               .subscribe(s -> {
 				                   if ("hello".equals(s)) {
@@ -208,7 +208,7 @@ class TcpMetricsTests {
 		          .subscribe();
 
 		connection.inbound()
-		          .receive()
+		          .receiveBuffer()
 		          .asString()
 		          .subscribe(s -> {
 		              if ("hello".equals(s)) {

@@ -262,7 +262,7 @@ class DefaultPooledConnectionProviderTest {
 					                     pool.set(pools.get(pools.keySet().toArray()[0]));
 					                 })
 					                 .doOnDisconnected(conn -> latch.countDown())
-					                 .handle((in, out) -> in.receive().then())
+					                 .handle((in, out) -> in.receiveBuffer().then())
 					                 .wiretap(true)
 					                 .connect()
 					                 .materialize(),
@@ -331,7 +331,7 @@ class DefaultPooledConnectionProviderTest {
 					                     pool.set(pools.get(pools.keySet().toArray()[0]));
 					                 })
 					                 .doOnDisconnected(conn -> latch.countDown())
-					                 .handle((in, out) -> in.receive().then())
+					                 .handle((in, out) -> in.receiveBuffer().then())
 					                 .wiretap(true)
 					                 .connect()
 					                 .materialize(),

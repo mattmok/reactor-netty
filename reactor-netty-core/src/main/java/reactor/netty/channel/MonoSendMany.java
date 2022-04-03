@@ -28,8 +28,8 @@ import java.util.function.Predicate;
 import java.util.function.ToIntFunction;
 import java.util.stream.Stream;
 
-import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufHolder;
+import io.netty5.buffer.api.Buffer;
 import io.netty5.channel.Channel;
 import io.netty5.channel.ChannelHandlerContext;
 import io.netty5.channel.EventLoop;
@@ -67,9 +67,9 @@ final class MonoSendMany<I, O> extends MonoSend<I, O> implements Scannable {
 		}
 	}
 
-	static MonoSendMany<ByteBuf, ByteBuf> byteBufSource(Publisher<? extends ByteBuf> source,
-			Channel channel,
-			Predicate<ByteBuf> predicate) {
+	static MonoSendMany<Buffer, Buffer> bufferSource(Publisher<? extends Buffer> source,
+	                                                   Channel channel,
+	                                                   Predicate<Buffer> predicate) {
 		return new MonoSendMany<>(source, channel, predicate, TRANSFORMATION_FUNCTION_BB, CONSUMER_NOCHECK_CLEANUP, SIZE_OF_BB);
 	}
 

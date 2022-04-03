@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.channels.WritableByteChannel;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -31,7 +32,7 @@ import java.util.function.Predicate;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
-import io.netty.buffer.Unpooled;
+import io.netty5.buffer.api.Buffer;
 import io.netty5.buffer.api.BufferAllocator;
 import io.netty5.channel.Channel;
 import io.netty5.channel.DefaultFileRegion;
@@ -41,6 +42,9 @@ import org.reactivestreams.Subscriber;
 import reactor.core.Exceptions;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import static io.netty5.buffer.api.adaptor.ByteBufAdaptor.extractOrCopy;
+import static io.netty5.buffer.api.adaptor.ByteBufAdaptor.intoByteBuf;
 
 /**
  * An outbound-traffic API delegating to an underlying {@link Channel}.
@@ -58,13 +62,16 @@ public interface NettyOutbound extends Publisher<Void> {
 	 * Returns the assigned {@link ByteBufAllocator}.
 	 *
 	 * @return the {@link ByteBufAllocator}
+	 * @deprecated Use {@link #bufferAlloc()}. This method will be removed in version 2.1.0.
 	 */
+	@Deprecated
 	ByteBufAllocator alloc();
 
 	/**
 	 * Returns the assigned {@link BufferAllocator}.
 	 *
 	 * @return the {@link BufferAllocator}
+	 * @since 2.0.0
 	 */
 	BufferAllocator bufferAlloc();
 
@@ -89,7 +96,9 @@ public interface NettyOutbound extends Publisher<Void> {
 	 *
 	 * @return A new {@link NettyOutbound} to append further send. It will emit a complete
 	 * signal successful sequence write (e.g. after "flush") or any error during write.
+	 * @deprecated Use {@link #sendBuffer(Publisher)}. This method will be removed in version 2.1.0.
 	 */
+	@Deprecated
 	default NettyOutbound send(Publisher<? extends ByteBuf> dataStream) {
 		return send(dataStream, ReactorNetty.PREDICATE_BB_FLUSH);
 	}
@@ -105,8 +114,44 @@ public interface NettyOutbound extends Publisher<Void> {
 	 *
 	 * @return A new {@link NettyOutbound} to append further send. It will emit a complete
 	 * signal successful sequence write (e.g. after "flush") or any error during write.
+	 * @deprecated Use {@link #sendBuffer(Publisher, Predicate)}. This method will be removed in version 2.1.0.
 	 */
-	NettyOutbound send(Publisher<? extends ByteBuf> dataStream, Predicate<ByteBuf> predicate);
+	@Deprecated
+	default NettyOutbound send(Publisher<? extends ByteBuf> dataStream, Predicate<ByteBuf> predicate) {
+		return sendBuffer(ReactorNetty.publisherOrScalarMap(dataStream, bb -> extractOrCopy(bufferAlloc(), bb)),
+				buffer -> predicate.test(intoByteBuf(buffer)));
+	}
+
+	/**
+	 * Sends data to the peer, listens for any error on write and closes on terminal signal
+	 * (complete|error). <p>A new {@link NettyOutbound} type (or the same) for typed send
+	 * sequences.</p>
+	 * <p>Note: Nesting any send* method is not supported.</p>
+	 *
+	 * @param dataStream the dataStream publishing OUT items to write on this channel
+	 *
+	 * @return A new {@link NettyOutbound} to append further send. It will emit a complete
+	 * signal successful sequence write (e.g. after "flush") or any error during write.
+	 * @since 2.0.0
+	 */
+	default NettyOutbound sendBuffer(Publisher<? extends Buffer> dataStream) {
+		return sendBuffer(dataStream, ReactorNetty.PREDICATE_BUFFER_FLUSH);
+	}
+
+	/**
+	 * Sends data to the peer, listens for any error on write and closes on terminal signal
+	 * (complete|error). <p>A new {@link NettyOutbound} type (or the same) for typed send
+	 * sequences.</p>
+	 * <p>Note: Nesting any send* method is not supported.</p>
+	 *
+	 * @param dataStream the dataStream publishing OUT items to write on this channel
+	 * @param predicate that returns true if explicit flush operation is needed after that buffer
+	 *
+	 * @return A new {@link NettyOutbound} to append further send. It will emit a complete
+	 * signal successful sequence write (e.g. after "flush") or any error during write.
+	 * @since 2.0.0
+	 */
+	NettyOutbound sendBuffer(Publisher<? extends Buffer> dataStream, Predicate<Buffer> predicate);
 
 	/**
 	 * Sends bytes to the peer, listens for any error on write and closes on terminal
@@ -120,7 +165,7 @@ public interface NettyOutbound extends Publisher<Void> {
 	 * error during write
 	 */
 	default NettyOutbound sendByteArray(Publisher<? extends byte[]> dataStream) {
-		return send(ReactorNetty.publisherOrScalarMap(dataStream, Unpooled::wrappedBuffer));
+		return sendBuffer(ReactorNetty.publisherOrScalarMap(dataStream, bytes -> bufferAlloc().copyOf(bytes)));
 	}
 
 	/**
@@ -232,10 +277,13 @@ public interface NettyOutbound extends Publisher<Void> {
 	 * any error during write
 	 */
 	default NettyOutbound sendGroups(Publisher<? extends Publisher<? extends ByteBuf>> dataStreams) {
-		return send(
+		Buffer BOUNDARY = bufferAlloc().copyOf("ReactorNettyBoundary".getBytes(StandardCharsets.UTF_8)).makeReadOnly();
+		return sendBuffer(
 				Flux.from(dataStreams)
-				    .concatMap(p -> Flux.<ByteBuf>from(p)
-				                        .concatWith(Mono.just(ReactorNetty.BOUNDARY)), 32),
+				    .concatMap(p -> Flux.from(p)
+				                        .map(bb -> extractOrCopy(bufferAlloc(), bb))
+				                        .concatWith(Mono.just(BOUNDARY.copy(0, BOUNDARY.readableBytes(), true))), 32)
+				    .doFinally(sig -> BOUNDARY.close()),
 				ReactorNetty.PREDICATE_GROUP_FLUSH);
 	}
 
@@ -310,12 +358,7 @@ public interface NettyOutbound extends Publisher<Void> {
 	default NettyOutbound sendString(Publisher<? extends String> dataStream,
 			Charset charset) {
 		Objects.requireNonNull(charset, "charset");
-		return send(ReactorNetty.publisherOrScalarMap(
-				dataStream, s -> {
-				    ByteBuf buffer = alloc().buffer();
-				    buffer.writeCharSequence(s, charset);
-				    return buffer;
-				}));
+		return sendBuffer(ReactorNetty.publisherOrScalarMap(dataStream, s -> bufferAlloc().copyOf(s.getBytes(charset))));
 	}
 
 	/**

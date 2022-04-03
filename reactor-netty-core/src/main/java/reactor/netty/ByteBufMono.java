@@ -38,7 +38,9 @@ import static java.util.Objects.requireNonNull;
  * operations.
  *
  * @author Stephane Maldini
+ * @deprecated Use {@link BufferMono}. This method will be removed in version 2.1.0.
  */
+@Deprecated
 public class ByteBufMono extends MonoOperator<ByteBuf, ByteBuf> {
 
 	/**

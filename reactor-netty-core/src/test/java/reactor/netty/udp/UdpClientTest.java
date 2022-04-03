@@ -23,13 +23,13 @@ import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
+import io.netty5.buffer.api.Buffer;
+import io.netty5.buffer.api.CompositeBuffer;
 import io.netty5.channel.EventLoopGroup;
 import io.netty5.channel.MultithreadEventLoopGroup;
 import io.netty5.channel.nio.NioHandler;
-import io.netty5.channel.socket.DatagramPacket;
-import io.netty5.channel.unix.DomainDatagramPacket;
+import io.netty5.channel.socket.BufferDatagramPacket;
+import io.netty5.channel.unix.BufferDomainDatagramPacket;
 import io.netty5.channel.unix.DomainSocketAddress;
 import io.netty5.util.CharsetUtil;
 import org.junit.jupiter.api.Test;
@@ -54,20 +54,19 @@ class UdpClientTest {
 				         .runOn(resources)
 				         .handle((in, out) -> in.receiveObject()
 				                                    .map(o -> {
-				                                            if (o instanceof DatagramPacket) {
-				                                                DatagramPacket received = (DatagramPacket) o;
-				                                                ByteBuf buffer = received.content();
-				                                                System.out.println("Server received " + buffer.readCharSequence(buffer.readableBytes(), CharsetUtil.UTF_8));
-				                                                ByteBuf buf1 = Unpooled.copiedBuffer("echo ", CharsetUtil.UTF_8);
-				                                                ByteBuf buf2 = Unpooled.copiedBuffer(buf1, buffer);
-				                                                buf1.release();
-				                                                return new DatagramPacket(buf2, received.sender());
+				                                            if (o instanceof BufferDatagramPacket received) {
+				                                                Buffer buffer = received.content();
+				                                                System.out.println("Server received " + buffer.toString(CharsetUtil.UTF_8));
+				                                                Buffer buf1 = out.bufferAlloc().copyOf("echo ".getBytes(CharsetUtil.UTF_8));
+				                                                CompositeBuffer buf2 = CompositeBuffer.compose(out.bufferAlloc(),
+				                                                        buf1.send(), buffer.send());
+				                                                return new BufferDatagramPacket(buf2, received.sender());
 				                                            }
 				                                            else {
 				                                                return Mono.error(new Exception());
 				                                            }
 				                                    })
-				                                    .flatMap(out::sendObject))
+				                                    .flatMap(o -> out.sendObject(o)))
 				         .wiretap(true)
 				         .bind()
 				         .block(Duration.ofSeconds(30));
@@ -79,7 +78,7 @@ class UdpClientTest {
 				         .port(address.getPort())
 				         .runOn(resources)
 				         .handle((in, out) -> {
-				                                  in.receive()
+				                                  in.receiveBuffer()
 				                                    .subscribe(b -> latch.countDown());
 				                                  return out.sendString(Mono.just("ping1"))
 				                                            .then(out.sendString(Mono.just("ping2")))
@@ -95,7 +94,7 @@ class UdpClientTest {
 				         .port(address.getPort())
 				         .runOn(resources)
 				         .handle((in, out) -> {
-				                                  in.receive()
+				                                  in.receiveBuffer()
 				                                    .subscribe(b -> latch.countDown());
 				                                  return out.sendString(Mono.just("ping3"))
 				                                            .then(out.sendString(Mono.just("ping4")))
@@ -209,15 +208,13 @@ class UdpClientTest {
 					         .runOn(resources)
 					         .handle((in, out) -> in.receiveObject()
 					                                .map(o -> {
-					                                    if (o instanceof DomainDatagramPacket) {
-					                                        DomainDatagramPacket received = (DomainDatagramPacket) o;
-					                                        ByteBuf buffer = received.content();
-					                                        System.out.println("Server received " +
-					                                                buffer.readCharSequence(buffer.readableBytes(), CharsetUtil.UTF_8));
-					                                        ByteBuf buf1 = Unpooled.copiedBuffer("echo ", CharsetUtil.UTF_8);
-					                                        ByteBuf buf2 = Unpooled.copiedBuffer(buf1, buffer);
-					                                        buf1.release();
-					                                        return new DomainDatagramPacket(buf2, received.sender());
+					                                    if (o instanceof BufferDomainDatagramPacket received) {
+					                                        Buffer buffer = received.content();
+					                                        System.out.println("Server received " + buffer.toString(CharsetUtil.UTF_8));
+					                                        Buffer buf1 = out.bufferAlloc().copyOf("echo ".getBytes(CharsetUtil.UTF_8));
+					                                        CompositeBuffer buf2 = CompositeBuffer.compose(out.bufferAlloc(),
+					                                                buf1.send(), buffer.send());
+					                                        return new BufferDomainDatagramPacket(buf2, received.sender());
 					                                    }
 					                                    else {
 					                                        return Mono.error(new Exception());
@@ -236,7 +233,7 @@ class UdpClientTest {
 					         .remoteAddress(() -> address)
 					         .runOn(resources)
 					         .handle((in, out) -> {
-					             in.receive()
+					             in.receiveBuffer()
 					               .subscribe(b -> latch.countDown());
 					             return out.sendString(Mono.just("ping1"))
 					                       .then(out.sendString(Mono.just("ping2")))
@@ -253,7 +250,7 @@ class UdpClientTest {
 					         .remoteAddress(() -> address)
 					         .runOn(resources)
 					         .handle((in, out) -> {
-					             in.receive()
+					             in.receiveBuffer()
 					               .subscribe(b -> latch.countDown());
 					             return out.sendString(Mono.just("ping3"))
 					                       .then(out.sendString(Mono.just("ping4")))

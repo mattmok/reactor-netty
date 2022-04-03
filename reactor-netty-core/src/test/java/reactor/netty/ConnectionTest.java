@@ -393,7 +393,7 @@ class ConnectionTest {
 
 	@Test
 	void testReceiverUnavailable() {
-		doTestUnavailable(testContext.inbound().receive().then(), "Receiver Unavailable");
+		doTestUnavailable(testContext.inbound().receiveBuffer().then(), "Receiver Unavailable");
 
 		doTestUnavailable(testContext.inbound().receiveObject().then(), "Receiver Unavailable");
 	}

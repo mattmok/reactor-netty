@@ -87,7 +87,7 @@ class UdpServerTests {
 		final Connection server = UdpServer.create()
 		                                   .port(port)
 		                                   .handle((in, out) -> {
-			                                   in.receive()
+			                                   in.receiveBuffer()
 			                                     .asByteArray()
 			                                     .log()
 			                                     .subscribe(bytes -> {
@@ -161,7 +161,7 @@ class UdpServerTests {
 					                             }
 					                             return Flux.empty();
 				                             })
-				                               .thenMany(in.receive()
+				                               .thenMany(in.receiveBuffer()
 				                                           .asByteArray()
 				                                           .doOnSubscribe(s -> latch2.countDown()))
 				                               .log()

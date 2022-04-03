@@ -15,7 +15,6 @@
  */
 package reactor.netty.tcp;
 
-import java.util.Collections;
 import java.util.Map;
 
 import io.netty5.channel.ChannelOption;

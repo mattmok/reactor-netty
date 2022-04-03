@@ -25,7 +25,9 @@ import java.util.function.Predicate;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
+import io.netty5.buffer.api.Buffer;
 import io.netty5.buffer.api.BufferAllocator;
+import io.netty5.buffer.api.adaptor.ByteBufAdaptor;
 import io.netty5.channel.Channel;
 import io.netty5.channel.ChannelHandler;
 import io.netty5.channel.ChannelHandlerContext;
@@ -38,6 +40,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Operators;
 import reactor.core.publisher.Sinks;
+import reactor.netty.BufferFlux;
 import reactor.netty.ByteBufFlux;
 import reactor.netty.ChannelOperationsId;
 import reactor.netty.Connection;
@@ -51,6 +54,7 @@ import reactor.util.Loggers;
 import reactor.util.annotation.Nullable;
 import reactor.util.context.Context;
 
+import static io.netty5.buffer.api.adaptor.ByteBufAdaptor.intoByteBuf;
 import static java.util.Objects.requireNonNull;
 import static reactor.netty.ReactorNetty.format;
 
@@ -170,9 +174,9 @@ public class ChannelOperations<INBOUND extends NettyInbound, OUTBOUND extends Ne
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public ByteBufAllocator alloc() {
-		return connection.channel()
-		                 .alloc();
+		return connection.channel().alloc();
 	}
 
 	@Override
@@ -283,13 +287,18 @@ public class ChannelOperations<INBOUND extends NettyInbound, OUTBOUND extends Ne
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public ByteBufFlux receive() {
-		return ByteBufFlux.fromInbound(receiveObject(), connection.channel()
-		                                                          .alloc());
+		return ByteBufFlux.fromInbound(receiveBuffer().map(ByteBufAdaptor::intoByteBuf), alloc());
 	}
 
 	@Override
-	public NettyOutbound send(Publisher<? extends ByteBuf> dataStream, Predicate<ByteBuf> predicate) {
+	public BufferFlux receiveBuffer() {
+		return BufferFlux.fromInbound(receiveObject(), bufferAlloc());
+	}
+
+	@Override
+	public NettyOutbound sendBuffer(Publisher<? extends Buffer> dataStream, Predicate<Buffer> predicate) {
 		requireNonNull(predicate, "predicate");
 		if (!channel().isActive()) {
 			return then(Mono.error(AbortedException.beforeSend()));
@@ -298,7 +307,7 @@ public class ChannelOperations<INBOUND extends NettyInbound, OUTBOUND extends Ne
 			return then(((Mono<?>) dataStream).flatMap(m -> Mono.fromCompletionStage(channel().writeAndFlush(m).asStage()))
 			                                 .doOnDiscard(ByteBuf.class, ByteBuf::release));
 		}
-		return then(MonoSendMany.byteBufSource(dataStream, channel(), predicate));
+		return then(MonoSendMany.bufferSource(dataStream, channel(), predicate));
 	}
 
 	@Override

@@ -42,8 +42,8 @@ import java.util.stream.Collectors;
 import javax.net.ssl.SNIHostName;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
+import io.netty5.buffer.api.Buffer;
+import io.netty5.buffer.api.adaptor.ByteBufAdaptor;
 import io.netty5.channel.AdaptiveRecvBufferAllocator;
 import io.netty5.channel.ChannelHandlerAdapter;
 import io.netty5.channel.ChannelHandlerContext;
@@ -62,7 +62,6 @@ import io.netty5.handler.ssl.util.SelfSignedCertificate;
 import io.netty5.util.NetUtil;
 import io.netty5.util.concurrent.SingleThreadEventExecutor;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.reactivestreams.Publisher;
@@ -81,6 +80,10 @@ import reactor.netty.resources.LoopResources;
 import reactor.util.Logger;
 import reactor.util.Loggers;
 
+import static io.netty5.buffer.api.DefaultBufferAllocators.preferredAllocator;
+import static io.netty5.buffer.api.adaptor.ByteBufAdaptor.intoByteBuf;
+import static io.netty5.handler.adaptor.BufferConversionHandler.bufferToByteBuf;
+import static io.netty5.handler.adaptor.BufferConversionHandler.byteBufToBuffer;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assumptions.assumeThat;
@@ -122,7 +125,7 @@ class TcpServerTests {
 		ObjectMapper m = new ObjectMapper();
 
 		DisposableServer connectedServer = server.handle((in, out) -> {
-			in.receive()
+			in.receiveBuffer()
 			  .asByteArray()
 			  .map(bb -> {
 			      try {
@@ -154,7 +157,7 @@ class TcpServerTests {
 
 		Connection connectedClient = client.handle((in, out) -> {
 			//in
-			in.receive()
+			in.receiveBuffer()
 			  .asString()
 			  .log("receive")
 			  .subscribe(data -> {
@@ -164,13 +167,11 @@ class TcpServerTests {
 			  });
 
 			//out
-			return out.send(Flux.just(new Pojo("John" + " Doe"))
+			return out.sendBuffer(Flux.just(new Pojo("John" + " Doe"))
 			                    .map(s -> {
 			                        try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
 			                            m.writeValue(os, s);
-			                            return out.alloc()
-			                                      .buffer()
-			                                      .writeBytes(os.toByteArray());
+			                            return out.bufferAlloc().copyOf(os.toByteArray());
 			                        }
 			                        catch (IOException ioe) {
 			                            throw Exceptions.propagate(ioe);
@@ -225,8 +226,6 @@ class TcpServerTests {
 	}
 
 	@Test
-	@Disabled
-	// TODO temporary disabled until everything is transformed to Buffer API
 	void exposesNettyPipelineConfiguration() throws InterruptedException {
 		final int port = SocketUtils.findAvailableTcpPort();
 		final CountDownLatch latch = new CountDownLatch(2);
@@ -235,7 +234,7 @@ class TcpServerTests {
 
 		BiFunction<? super NettyInbound, ? super NettyOutbound, ? extends Publisher<Void>>
 				serverHandler = (in, out) -> {
-			in.receive()
+			in.receiveBuffer()
 			  .asString()
 			  .subscribe(data -> {
 			      log.info("data " + data + " on " + in);
@@ -276,7 +275,7 @@ class TcpServerTests {
 		DisposableServer server = TcpServer.create()
 		                                   .port(0)
 		                                   .handle((in, out) -> {
-		                                       in.receive()
+		                                       in.receiveBuffer()
 		                                         .log("channel")
 		                                         .subscribe(trip -> countDownLatch.countDown());
 		                                       return Flux.never();
@@ -321,7 +320,7 @@ class TcpServerTests {
 				TcpServer.create()
 				         .secure(spec -> spec.sslContext(sslServer))
 				         .handle((in, out) ->
-				                 in.receive()
+				                 in.receiveBuffer()
 				                   .asString()
 				                   .flatMap(word -> "GOGOGO".equals(word) ?
 				                            out.sendFile(largeFile).then() :
@@ -340,7 +339,7 @@ class TcpServerTests {
 				         .port(context.port())
 				         .secure(spec -> spec.sslContext(sslClient))
 				         .handle((in, out) -> {
-				             in.receive()
+				             in.receiveBuffer()
 				               .asString()
 				               .log("-----------------CLIENT1")
 				               .subscribe(s -> {
@@ -359,7 +358,7 @@ class TcpServerTests {
 				         .port(context.port())
 				         .secure(spec -> spec.sslContext(sslClient))
 				         .handle((in, out) -> {
-				             in.receive()
+				             in.receiveBuffer()
 				               .asString(StandardCharsets.UTF_8)
 				               .takeUntil(d -> d.contains("<- 1024 mark here"))
 				               .reduceWith(String::new, String::concat)
@@ -431,7 +430,7 @@ class TcpServerTests {
 		DisposableServer context =
 				TcpServer.create()
 				         .handle((in, out) ->
-				                 in.receive()
+				                 in.receiveBuffer()
 				                   .asString()
 				                   .flatMap(word -> "GOGOGO".equals(word) ?
 				                            fn.apply(out).then() :
@@ -449,7 +448,7 @@ class TcpServerTests {
 				TcpClient.create()
 				         .port(context.port())
 				         .handle((in, out) -> {
-				             in.receive()
+				             in.receiveBuffer()
 				               .asString()
 				               .log("-----------------CLIENT1")
 				               .subscribe(s -> {
@@ -468,7 +467,7 @@ class TcpServerTests {
 				         .port(context.port())
 				         .option(ChannelOption.RCVBUF_ALLOCATOR, new AdaptiveRecvBufferAllocator(64, 1024, 65536))
 				         .handle((in, out) -> {
-				             in.receive()
+				             in.receiveBuffer()
 				               .asString(StandardCharsets.UTF_8)
 				               .take(2)
 				               .reduceWith(String::new, String::concat)
@@ -534,7 +533,7 @@ class TcpServerTests {
 	@Test
 	void tcpServerCanEncodeAndDecodeJSON() throws Exception {
 		ObjectMapper mapper = new ObjectMapper();
-		Function<Pojo, ByteBuf> jsonEncoder = pojo -> {
+		Function<Pojo, Buffer> jsonEncoder = pojo -> {
 			ByteArrayOutputStream out = new ByteArrayOutputStream();
 			try {
 				mapper.writeValue(out, pojo);
@@ -542,7 +541,7 @@ class TcpServerTests {
 			catch (Exception e) {
 				throw new RuntimeException(e);
 			}
-			return Unpooled.copiedBuffer(out.toByteArray());
+			return preferredAllocator().copyOf(out.toByteArray());
 		};
 		Function<String, Pojo> jsonDecoder = s -> {
 			try {
@@ -557,7 +556,7 @@ class TcpServerTests {
 
 		DisposableServer server =
 		        TcpServer.create()
-		                 .handle((in, out) -> out.send(in.receive()
+		                 .handle((in, out) -> out.sendBuffer(in.receiveBuffer()
 		                                                 .asString()
 		                                                 .map(jsonDecoder)
 		                                                 .log()
@@ -590,7 +589,7 @@ class TcpServerTests {
 	@Test
 	void flushEvery5ElementsWithManualDecoding() throws Exception {
 		ObjectMapper mapper = new ObjectMapper();
-		Function<List<Pojo>, ByteBuf> jsonEncoder = pojo -> {
+		Function<List<Pojo>, Buffer> jsonEncoder = pojo -> {
 			ByteArrayOutputStream out = new ByteArrayOutputStream();
 			try {
 				mapper.writeValue(out, pojo);
@@ -598,7 +597,7 @@ class TcpServerTests {
 			catch (Exception e) {
 				throw new RuntimeException(e);
 			}
-			return Unpooled.copiedBuffer(out.toByteArray());
+			return preferredAllocator().copyOf(out.toByteArray());
 		};
 		Function<String, Pojo[]> jsonDecoder = s -> {
 			try {
@@ -613,14 +612,17 @@ class TcpServerTests {
 
 		DisposableServer server =
 				TcpServer.create()
-				         .handle((in, out) -> in.withConnection(c -> c.addHandlerLast(new JsonObjectDecoder()))
-				                                .receive()
+				         .handle((in, out) -> in.withConnection(c ->
+				                         c.addHandlerLast("bufferToByteBuf", bufferToByteBuf())
+				                          .addHandlerLast(new JsonObjectDecoder())
+				                          .addHandlerLast("byteBufToBuffer", byteBufToBuffer()))
+				                                .receiveBuffer()
 				                                .asString()
 				                                .log("serve")
 				                                .map(jsonDecoder)
 				                                .concatMap(Flux::fromArray)
 				                                .window(5)
-				                                .concatMap(w -> out.send(w.collectList().map(jsonEncoder))))
+				                                .concatMap(w -> out.sendBuffer(w.collectList().map(jsonEncoder))))
 				         .wiretap(true)
 				         .bindNow();
 
@@ -629,15 +631,18 @@ class TcpServerTests {
 		Connection client = TcpClient.create()
 		                             .port(server.port())
 		                             .handle((in, out) -> {
-		                                 in.withConnection(c -> c.addHandlerLast(new JsonObjectDecoder()))
-		                                   .receive()
+		                                 in.withConnection(c ->
+		                         c.addHandlerLast("bufferToByteBuf", bufferToByteBuf())
+		                          .addHandlerLast(new JsonObjectDecoder())
+		                          .addHandlerLast("byteBufToBuffer", byteBufToBuffer()))
+		                                   .receiveBuffer()
 		                                   .asString()
 		                                   .log("receive")
 		                                   .map(jsonDecoder)
 		                                   .concatMap(Flux::fromArray)
 		                                   .subscribe(c -> dataLatch.countDown());
 
-		                                 return out.send(Flux.range(1, 10)
+		                                 return out.sendBuffer(Flux.range(1, 10)
 		                                                     .map(it -> new Pojo("test" + it))
 		                                                     .log("send")
 		                                                     .collectList()
@@ -659,7 +664,7 @@ class TcpServerTests {
 	@Test
 	void retryStrategiesWhenServerFails() throws Exception {
 		ObjectMapper mapper = new ObjectMapper();
-		Function<List<Pojo>, ByteBuf> jsonEncoder = pojo -> {
+		Function<List<Pojo>, Buffer> jsonEncoder = pojo -> {
 			ByteArrayOutputStream out = new ByteArrayOutputStream();
 			try {
 				mapper.writeValue(out, pojo);
@@ -667,7 +672,7 @@ class TcpServerTests {
 			catch (Exception e) {
 				throw new RuntimeException(e);
 			}
-			return Unpooled.copiedBuffer(out.toByteArray());
+			return preferredAllocator().copyOf(out.toByteArray());
 		};
 		Function<String, Pojo[]> jsonDecoder = s -> {
 			try {
@@ -684,7 +689,7 @@ class TcpServerTests {
 		final AtomicInteger j = new AtomicInteger();
 		DisposableServer server =
 		        TcpServer.create().host("localhost")
-		                 .handle((in, out) -> out.sendGroups(in.receive()
+		                 .handle((in, out) -> out.sendGroups(in.receiveBuffer()
 		                                                       .asString()
 		                                                       .map(jsonDecoder)
 		                                                       .map(d -> Flux.fromArray(d)
@@ -695,7 +700,8 @@ class TcpServerTests {
 		                                                                     })
 		                                                                     .retry(2)
 		                                                                     .collectList()
-		                                                                     .map(jsonEncoder))
+		                                                                     .map(jsonEncoder)
+		                                                                     .map(ByteBufAdaptor::intoByteBuf))
 		                                                       .doOnComplete(() -> System.out.println("wow"))
 		                                                       .log("flatmap-retry")))
 		                 .wiretap(true)
@@ -706,14 +712,14 @@ class TcpServerTests {
 		Connection client = TcpClient.create()
 		                             .remoteAddress(server::address)
 		                             .handle((in, out) -> {
-		                                 in.receive()
+		                                 in.receiveBuffer()
 		                                   .asString()
 		                                   .map(jsonDecoder)
 		                                   .concatMap(Flux::fromArray)
 		                                   .log("receive")
 		                                   .subscribe(c -> latch.countDown());
 
-		                                 return out.send(Flux.range(1, elem)
+		                                 return out.sendBuffer(Flux.range(1, elem)
 		                                                     .map(i -> new Pojo("test" + i))
 		                                                     .log("send")
 		                                                     .collectList()
@@ -733,8 +739,6 @@ class TcpServerTests {
 	}
 
 	@Test
-	@Disabled
-	// TODO temporary disabled until everything is transformed to Buffer API
 	void testEchoWithLineBasedFrameDecoder() throws Exception {
 		CountDownLatch latch = new CountDownLatch(2);
 		DisposableServer server =
@@ -743,7 +747,7 @@ class TcpServerTests {
 				         .doOnConnection(c -> c.addHandlerLast("codec",
 				                                               new LineBasedFrameDecoder(256)))
 				         .handle((in, out) ->
-				                 out.sendString(in.receive()
+				                 out.sendString(in.receiveBuffer()
 				                                  .asString()
 				                                  .doOnNext(s -> {
 				                                      if ("4".equals(s)) {
@@ -762,7 +766,7 @@ class TcpServerTests {
 				                                              new LineBasedFrameDecoder(256)))
 				         .handle((in, out) ->
 				                 out.sendString(Flux.just("1\n", "2\n", "3\n", "4\n"))
-				                    .then(in.receive()
+				                    .then(in.receiveBuffer()
 				                            .asString()
 				                            .doOnNext(s -> {
 				                                if ("4".equals(s)) {
@@ -864,7 +868,7 @@ class TcpServerTests {
 				         .port(0)
 				         .childOption(ChannelOption.ALLOW_HALF_CLOSURE, true)
 				         .wiretap(true)
-				         .handle((in, out) -> in.receive()
+				         .handle((in, out) -> in.receiveBuffer()
 				                                .asString()
 				                                .doOnNext(s -> {
 				                                    if (s.endsWith("257\n")) {
@@ -885,7 +889,7 @@ class TcpServerTests {
 
 		CountDownLatch latch = new CountDownLatch(1);
 		conn.inbound()
-		    .receive()
+		    .receiveBuffer()
 		    .asString()
 		    .subscribe(s -> {
 		        if ("END".equals(s)) {
@@ -934,7 +938,7 @@ class TcpServerTests {
 		Flux.merge(client.connect(), client.connect())
 		    .flatMap(conn ->
 		            conn.inbound()
-		                .receive()
+		                .receiveBuffer()
 		                .asString())
 		    .collect(Collectors.joining())
 		    .subscribe(s -> {
@@ -1001,7 +1005,7 @@ class TcpServerTests {
 				TcpServer.create()
 				         .bindAddress(() -> new DomainSocketAddress("/tmp/test.sock"))
 				         .wiretap(true)
-				         .handle((in, out) -> out.send(in.receive().retain()))
+				         .handle((in, out) -> out.sendBuffer(in.receiveBuffer()))
 				         .bindNow();
 
 		Connection conn =
@@ -1017,7 +1021,7 @@ class TcpServerTests {
 
 		CountDownLatch latch = new CountDownLatch(1);
 		conn.inbound()
-		    .receive()
+		    .receiveBuffer()
 		    .asString()
 		    .doOnNext(s -> {
 		        if (s.endsWith("3")) {
@@ -1150,7 +1154,7 @@ class TcpServerTests {
 				         .connectNow();
 
 		conn.inbound()
-		    .receive()
+		    .receiveBuffer()
 		    .blockLast(Duration.ofSeconds(30));
 
 		assertThat(hostname.get())

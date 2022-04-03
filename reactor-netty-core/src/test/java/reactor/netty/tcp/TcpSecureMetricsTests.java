@@ -93,7 +93,7 @@ class TcpSecureMetricsTests extends TcpMetricsTests {
 
 		CountDownLatch latch = new CountDownLatch(1);
 		connection.inbound()
-		          .receive()
+		          .receiveBuffer()
 		          .asString()
 		          .subscribe(null, null, latch::countDown);
 

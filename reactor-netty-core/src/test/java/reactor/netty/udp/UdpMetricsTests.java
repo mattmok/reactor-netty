@@ -23,9 +23,8 @@ import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.micrometer.core.tck.MeterRegistryAssert;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
-import io.netty5.channel.socket.DatagramPacket;
+import io.netty5.buffer.api.Buffer;
+import io.netty5.channel.socket.BufferDatagramPacket;
 import io.netty5.util.CharsetUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -104,11 +103,10 @@ class UdpMetricsTests {
 				             out.sendObject(
 				                 in.receiveObject()
 				                   .map(o -> {
-				                       if (o instanceof DatagramPacket) {
-				                           DatagramPacket p = (DatagramPacket) o;
+				                       if (o instanceof BufferDatagramPacket p) {
 				                           latch.countDown();
-				                           ByteBuf buf = Unpooled.copiedBuffer("hello", CharsetUtil.UTF_8);
-				                           return new DatagramPacket(buf, p.sender());
+				                           Buffer buf = out.bufferAlloc().copyOf("hello".getBytes(CharsetUtil.UTF_8));
+				                           return new BufferDatagramPacket(buf, p.sender());
 				                       }
 				                       else {
 				                           return Mono.error(new Exception("Unexpected type of the message: " + o));
@@ -124,7 +122,7 @@ class UdpMetricsTests {
 		                .subscribe();
 
 		clientConnection.inbound()
-		                .receive()
+		                .receiveBuffer()
 		                .asString()
 		                .subscribe(s -> {
 		                    if ("hello".equals(s)) {
@@ -145,11 +143,10 @@ class UdpMetricsTests {
 				             out.sendObject(
 				                 in.receiveObject()
 				                   .map(o -> {
-				                       if (o instanceof DatagramPacket) {
-				                           DatagramPacket p = (DatagramPacket) o;
+				                       if (o instanceof BufferDatagramPacket p) {
 				                           latch.countDown();
-				                           ByteBuf buf = Unpooled.copiedBuffer("hello", CharsetUtil.UTF_8);
-				                           return new DatagramPacket(buf, p.sender());
+				                           Buffer buf = out.bufferAlloc().copyOf("hello".getBytes(CharsetUtil.UTF_8));
+				                           return new BufferDatagramPacket(buf, p.sender());
 				                       }
 				                       else {
 				                           return Mono.error(new Exception("Unexpected type of the message: " + o));
@@ -172,7 +169,7 @@ class UdpMetricsTests {
 		                .subscribe();
 
 		clientConnection.inbound()
-		                .receive()
+		                .receiveBuffer()
 		                .asString()
 		                .subscribe(s -> {
 		                    if ("hello".equals(s)) {

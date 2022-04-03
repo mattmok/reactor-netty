@@ -28,14 +28,22 @@ import reactor.core.publisher.Flux;
  */
 public interface NettyInbound {
 
-
 	/**
 	 * A {@link Flux} extension that allows for extra decoding operators
 	 *
 	 * @return a new {@link ByteBufFlux}
+	 * @deprecated Use {@link #receiveBuffer()}. This method will be removed in version 2.1.0.
 	 */
+	@Deprecated
 	ByteBufFlux receive();
 
+	/**
+	 * A {@link Flux} extension that allows for extra decoding operators
+	 *
+	 * @return a new {@link BufferFlux}
+	 * @since 2.0.0
+	 */
+	BufferFlux receiveBuffer();
 
 	/**
 	 * a {@literal Object} inbound {@link Flux}

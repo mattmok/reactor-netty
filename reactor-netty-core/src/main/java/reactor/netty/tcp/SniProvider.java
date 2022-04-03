@@ -15,7 +15,7 @@
  */
 package reactor.netty.tcp;
 
-import io.netty.buffer.ByteBufAllocator;
+import io.netty5.buffer.api.BufferAllocator;
 import io.netty5.channel.Channel;
 import io.netty5.channel.ChannelPipeline;
 import io.netty5.handler.ssl.SniHandler;
@@ -85,7 +85,7 @@ final class SniProvider {
 		}
 
 		@Override
-		protected SslHandler newSslHandler(SslContext context, ByteBufAllocator allocator) {
+		protected SslHandler newSslHandler(SslContext context, BufferAllocator allocator) {
 			SslHandler sslHandler = super.newSslHandler(context, allocator);
 			String hostName = hostname();
 			if (hostName == null) {

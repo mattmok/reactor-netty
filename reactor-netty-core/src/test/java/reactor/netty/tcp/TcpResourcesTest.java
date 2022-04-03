@@ -122,7 +122,7 @@ class TcpResourcesTest {
 		                                   .port(port)
 		                                   .handle((in, out) -> {
 		                               	try {
-			                                in.receive()
+			                                in.receiveBuffer()
 			                                  .blockFirst();
 		                                }
 		                                catch (RuntimeException e) {

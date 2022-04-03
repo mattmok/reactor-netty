@@ -15,8 +15,7 @@
  */
 package reactor.netty.channel;
 
-import io.netty.buffer.EmptyByteBuf;
-import io.netty.buffer.Unpooled;
+import io.netty5.buffer.api.Buffer;
 import io.netty5.channel.ChannelHandlerAdapter;
 import io.netty5.channel.ChannelHandlerContext;
 import io.netty5.handler.codec.DecoderResult;
@@ -31,7 +30,6 @@ import reactor.util.Logger;
 import reactor.util.Loggers;
 
 import static reactor.netty.ReactorNetty.format;
-import static reactor.netty.ReactorNetty.toPrettyHexDump;
 
 /**
  * Netty {@link io.netty5.channel.ChannelHandlerAdapter} implementation that bridge data
@@ -84,7 +82,11 @@ final class ChannelOperationsHandler extends ChannelHandlerAdapter {
 	@Override
 	@SuppressWarnings("FutureReturnValueIgnored")
 	final public void channelRead(ChannelHandlerContext ctx, Object msg) {
-		if (msg == null || msg == Unpooled.EMPTY_BUFFER || msg instanceof EmptyByteBuf) {
+		if (msg == null) {
+			return;
+		}
+		else if ((msg instanceof Buffer buffer) && buffer.readableBytes() == 0) {
+			buffer.close();
 			return;
 		}
 		try {
@@ -102,8 +104,7 @@ final class ChannelOperationsHandler extends ChannelHandlerAdapter {
 						}
 					}
 
-					log.debug(format(ctx.channel(), "No ChannelOperation attached. Dropping: {}"),
-							toPrettyHexDump(msg));
+					log.debug(format(ctx.channel(), "No ChannelOperation attached. Dropping: {}"), msg);
 				}
 				ReferenceCountUtil.release(msg);
 			}
@@ -131,8 +132,7 @@ final class ChannelOperationsHandler extends ChannelHandlerAdapter {
 	}
 
 	static void safeRelease(Object msg) {
-		if (msg instanceof ReferenceCounted) {
-			ReferenceCounted referenceCounted = (ReferenceCounted) msg;
+		if (msg instanceof ReferenceCounted referenceCounted) {
 			if (referenceCounted.refCnt() > 0) {
 				try {
 					referenceCounted.release();
@@ -141,6 +141,16 @@ final class ChannelOperationsHandler extends ChannelHandlerAdapter {
 					if (log.isDebugEnabled()) {
 						log.debug("", e);
 					}
+				}
+			}
+		}
+		else if (msg instanceof AutoCloseable closeable) {
+			try {
+				closeable.close();
+			}
+			catch (Exception e) {
+				if (log.isDebugEnabled()) {
+					log.debug("", e);
 				}
 			}
 		}
