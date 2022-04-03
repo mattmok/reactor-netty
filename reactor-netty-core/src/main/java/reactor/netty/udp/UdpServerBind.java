@@ -24,6 +24,7 @@ import reactor.netty.resources.ConnectionProvider;
 
 import java.net.InetSocketAddress;
 import java.util.Collections;
+import java.util.Map;
 
 /**
  * Provides the actual {@link UdpServer} instance.
@@ -39,7 +40,7 @@ final class UdpServerBind extends UdpServer {
 
 	UdpServerBind() {
 		this.config = new UdpServerConfig(
-				Collections.singletonMap(ChannelOption.AUTO_READ, false),
+				Map.of(ChannelOption.AUTO_READ, false, ChannelOption.RCVBUF_ALLOCATOR_USE_BUFFER, true),
 				() -> new InetSocketAddress(NetUtil.LOCALHOST, DEFAULT_PORT));
 	}
 

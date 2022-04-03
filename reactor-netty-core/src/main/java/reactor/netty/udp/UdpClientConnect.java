@@ -21,6 +21,7 @@ import reactor.netty.resources.ConnectionProvider;
 
 import java.net.InetSocketAddress;
 import java.util.Collections;
+import java.util.Map;
 
 /**
  * Provides the actual {@link UdpClient} instance.
@@ -37,7 +38,7 @@ final class UdpClientConnect extends UdpClient {
 	UdpClientConnect() {
 		this.config = new UdpClientConfig(
 				ConnectionProvider.newConnection(),
-				Collections.singletonMap(ChannelOption.AUTO_READ, false),
+				Map.of(ChannelOption.AUTO_READ, false, ChannelOption.RCVBUF_ALLOCATOR_USE_BUFFER, true),
 				() -> new InetSocketAddress(NetUtil.LOCALHOST, DEFAULT_PORT));
 	}
 

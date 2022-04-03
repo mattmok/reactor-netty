@@ -16,6 +16,7 @@
 package reactor.netty.tcp;
 
 import java.util.Collections;
+import java.util.Map;
 
 import io.netty5.channel.ChannelOption;
 import io.netty5.util.NetUtil;
@@ -35,7 +36,7 @@ final class TcpClientConnect extends TcpClient {
 	TcpClientConnect(ConnectionProvider provider) {
 		this.config = new TcpClientConfig(
 				provider,
-				Collections.singletonMap(ChannelOption.AUTO_READ, false),
+				Map.of(ChannelOption.AUTO_READ, false, ChannelOption.RCVBUF_ALLOCATOR_USE_BUFFER, true),
 				() -> AddressUtils.createUnresolved(NetUtil.LOCALHOST.getHostAddress(), DEFAULT_PORT));
 	}
 

@@ -35,12 +35,10 @@ final class TcpServerBind extends TcpServer {
 	final TcpServerConfig config;
 
 	TcpServerBind() {
-		Map<ChannelOption<?>, Boolean> childOptions = new HashMap<>(2);
-		childOptions.put(ChannelOption.AUTO_READ, false);
-		childOptions.put(ChannelOption.TCP_NODELAY, true);
 		this.config = new TcpServerConfig(
 				Collections.singletonMap(ChannelOption.SO_REUSEADDR, true),
-				childOptions,
+				Map.of(ChannelOption.AUTO_READ, false, ChannelOption.TCP_NODELAY, true,
+						ChannelOption.RCVBUF_ALLOCATOR_USE_BUFFER, true),
 				() -> new InetSocketAddress(DEFAULT_PORT));
 	}
 
