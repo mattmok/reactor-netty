@@ -15,8 +15,6 @@
  */
 package reactor.netty.http.server;
 
-import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
-
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
@@ -46,6 +44,8 @@ import reactor.netty.http.HttpOperations;
 import reactor.netty.http.websocket.WebsocketInbound;
 import reactor.netty.http.websocket.WebsocketOutbound;
 import reactor.util.annotation.Nullable;
+
+import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
 import static reactor.netty.ReactorNetty.format;
 
@@ -155,7 +155,7 @@ final class WebsocketServerOperations extends HttpServerOperations
 			}
 			else {
 				// terminate() will invoke onInboundComplete()
-				sendCloseNow(closeFrame, WebSocketCloseStatus.EMPTY, f -> terminate());
+				sendCloseNow(closeFrame, WebSocketCloseStatus.NORMAL_CLOSURE, f -> terminate());
 			}
 			return;
 		}
