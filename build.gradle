@@ -18,9 +18,9 @@ import java.text.SimpleDateFormat
 
 buildscript {
 	repositories {
-		mavenCentral()
-		maven { url "https://plugins.gradle.org/m2/" }
-		maven { url "https://repo.spring.io/plugins-release" }
+		maven { allowInsecureProtocol = true
+			url "http://cloud.tiamaes.com:6001/nexus/repository/public/"
+		}
 	}
 	dependencies {
 		classpath 'org.jfrog.buildinfo:build-info-extractor-gradle:4.28.3' //applied in individual submodules
@@ -33,7 +33,7 @@ plugins {
 	id 'org.asciidoctor.jvm.pdf' version '3.3.2' apply false
 	id 'com.google.osdetector' version '1.7.0'
 	id 'org.gradle.test-retry' version '1.4.0'
-	id 'io.spring.nohttp' version '0.0.10'
+	id 'io.spring.nohttp' version '0.0.10' apply false
 	id 'com.github.johnrengelman.shadow' version '7.1.2' apply false
 	//we now need version of Artifactory gradle plugin deployed on Maven Central, see above
 	id 'me.champeau.gradle.japicmp' version '0.4.0' apply false
@@ -41,14 +41,20 @@ plugins {
 	id 'io.spring.javadoc' version '0.0.1' apply false
 	id 'io.spring.javadoc-aggregate' version '0.0.1' apply false
 	id 'biz.aQute.bnd.builder' version '6.3.1' apply false
+	id 'java-library'
+	id 'maven-publish'
 }
 
+group = 'io.projectreactor.netty'
 description = 'Reactive Streams Netty driver'
 
 apply from: "gradle/releaser.gradle"
 
 repositories { //needed at root for nohttp-checkstyle
-	mavenCentral()
+	maven {
+		allowInsecureProtocol = true
+		url "http://cloud.tiamaes.com:6001/nexus/repository/public/"
+	}
 }
 
 ext {
@@ -134,11 +140,6 @@ ext {
 					"https://projectreactor.io/docs/netty/release/api/",] as String[]
 }
 
-nohttp {
-	source.exclude "docs/asciidoc/highlight/**"
-	source.exclude "**/build/**"
-}
-
 spotless {
 	if (project.hasProperty("spotlessFrom")) {
 		if (project.spotlessFrom == "ALL") {
@@ -168,6 +169,7 @@ subprojects {
 	group = 'io.projectreactor.netty'
 
 	apply plugin: 'java-library'
+	apply plugin: 'maven-publish'
 	apply plugin: 'jacoco'
 	apply plugin: 'checkstyle'
 	apply plugin: 'org.gradle.test-retry'
@@ -290,9 +292,10 @@ subprojects {
 	}
 
 	repositories {
-		mavenCentral()
-		maven { url "https://oss.sonatype.org/content/repositories/releases/" }
-		maven { url 'https://repo.spring.io/milestone' }
+		maven {
+			allowInsecureProtocol = true
+			url "http://cloud.tiamaes.com:6001/nexus/repository/public/"
+		}
 		if (version.endsWith('-SNAPSHOT') || version.contains('-SNAPSHOT-')) { //classic or customized snapshots
 			if (System.getenv()["GITHUB_ACTION"] == null) {
 				mavenLocal()
@@ -318,9 +321,53 @@ subprojects {
 	}
 
 	check.dependsOn jacocoTestReport
+
+
+	publishing {
+		publications {
+			jar(MavenPublication) {
+				from components.java
+			}
+		}
+		repositories {
+			maven {
+				name 'nexus'
+				allowInsecureProtocol = true
+				url "http://cloud.tiamaes.com:6001/nexus/repository/m1-releases/"
+				credentials {
+					username 'deployment'
+					password 'deployment'
+				}
+			}
+		}
+	}
 }
 
 configurations.all {
 	// check for updates every build
 	resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
 }
+
+java {
+	withSourcesJar()
+}
+
+publishing {
+	publications {
+		mavenJava(MavenPublication) {
+			from components.java
+		}
+	}
+	repositories {
+		maven {
+			name 'nexus'
+			allowInsecureProtocol = true
+			url "http://cloud.tiamaes.com:6001/nexus/repository/m1-releases/"
+			credentials {
+				username 'deployment'
+				password 'deployment'
+			}
+		}
+	}
+}
+

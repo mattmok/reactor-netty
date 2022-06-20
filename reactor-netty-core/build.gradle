@@ -267,6 +267,7 @@ task jarFileTest(type: Test) {
 tasks.check.dependsOn(jarFileTest)
 
 task shadedJarTest(type: Test) {
+	enabled = false
 	testClassesDirs = sourceSets.test.output.classesDirs
 
 	Set<? super File> mainOutputs = [
